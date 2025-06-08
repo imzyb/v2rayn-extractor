@@ -3,45 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>mihomo/singbox 汇聚工具</title>
+    <title>V2RayN 节点提取器</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <style>
-        /* --- [核心修改] --- */
-
         body {
-            /* [重要] 使用一张固定的高质量图片作为背景 */
+            /* 使用一张固定的高质量图片作为背景 */
             background-image: url('https://images.pexels.com/photos/3785424/pexels-photo-3785424.jpeg?auto=compress&cs=tinysrgb&w=1920');
-            
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
             
-            /* [新增] 使用 Flex 布局让卡片在屏幕中垂直和水平居中 */
+            /* 使用 Flex 布局让卡片在屏幕中垂直和水平居中 */
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
+            padding: 1rem;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         
         /* 玻璃效果卡片 */
         .glass-card {
-            background: rgba(255, 255, 255, 0.15); /* [修改] 亮色玻璃效果 */
+            background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 1.5rem;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            max-width: 500px;
+            max-width: 550px; /* 稍微加宽一点 */
             width: 100%;
+            color: #fff;
         }
 
         /* 自定义表单控件样式 */
-        .form-control, .form-select {
+        .form-control, .form-select, .form-check-input:checked {
             background-color: rgba(255, 255, 255, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.3);
             color: #fff;
@@ -55,81 +54,155 @@
             box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
             color: #fff;
         }
+        .form-floating > label {
+            color: #ccc;
+        }
+        .form-check-input:checked {
+             background-color: #3B82F6;
+             border-color: #3B82F6;
+        }
 
         /* 自定义按钮样式 */
         .btn-primary {
-            background-color: #3B82F6; /* 参考图中的蓝色 */
+            background-color: #3B82F6;
             border-color: #3B82F6;
         }
         .btn-primary:hover {
             background-color: #2563EB;
             border-color: #2563EB;
         }
-
-        /* 自定义Tabs样式 */
-        .nav-pills .nav-link {
-            color: rgba(255, 255, 255, 0.7);
+        .btn-secondary {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
         }
-        .nav-pills .nav-link.active {
-            background-color: #3B82F6;
-            color: #fff;
+
+        /* 结果文本域 */
+        #results-container {
+            font-family: monospace;
+            background-color: rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
-    <div class="glass-card text-white p-4 p-md-5">
-        <h4 class="text-center mb-4">mihomo/singbox汇聚工具</h4>
-        
-        <ul class="nav nav-pills nav-fill mb-4">
-            <li class="nav-item">
-                <a class="nav-link active" href="#">Clash (mihomo)</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link disabled" href="#">Singbox (暂未支持)</a>
-            </li>
-        </ul>
+    <div class="glass-card p-4 p-md-5">
+        <div class="text-center mb-4">
+            <h2 class="fw-bold"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>V2RayN 节点提取器</h2>
+            <p class="text-white-50">输入订阅链接或上传YAML文件</p>
+        </div>
 
         <form id="node-form">
-            <div class="mb-3">
-                <select class="form-select">
-                    <option selected>选择配置模版 (默认，精简版，农场内外分流)</option>
-                </select>
+            <div class="mb-4">
+                <div class="d-flex justify-content-center gap-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="inputType" id="url-radio" value="url" checked>
+                        <label class="form-check-label" for="url-radio">订阅链接</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="inputType" id="file-radio" value="file">
+                        <label class="form-check-label" for="file-radio">YAML 文件</label>
+                    </div>
+                </div>
             </div>
             
-            <div class="mb-3">
-                <input type="url" class="form-control" id="url-input" name="url" placeholder="订阅链接" required>
+            <div class="mb-4" id="url-input-group">
+                <div class="form-floating">
+                    <input type="url" class="form-control" id="url-input" name="url" placeholder="在此输入订阅链接">
+                    <label for="url-input"><i class="fa-solid fa-link"></i> 在此输入订阅链接</label>
+                </div>
+            </div>
+
+            <div class="mb-4 d-none" id="file-input-group">
+                <label for="file-input" class="form-label"><i class="fa-solid fa-file-arrow-up"></i> 选择 YAML 文件</label>
+                <input type="file" class="form-control" id="file-input" name="file" accept=".yaml,.yml">
             </div>
             
-            <button type="submit" id="process-button" class="btn btn-primary w-100 btn-lg">
-                <span class="button-text">生成mihomo配置</span>
+            <button type="submit" id="process-button" class="btn btn-primary w-100 btn-lg fw-bold">
+                <span class="button-text"><i class="fa-solid fa-rocket me-2"></i>立即提取</span>
                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
             </button>
         </form>
 
-        <hr class="my-4 border-light/25">
+        <hr class="my-4 border-light opacity-25">
 
         <div>
-            <input type="text" id="results-container" class="form-control" readonly placeholder="订阅链接等">
-            <button id="copy-button" class="btn btn-secondary btn-sm mt-2 w-100 d-none">
-                <span class="copy-text">复制</span>
+            <label for="results-container" class="form-label fw-bold"><i class="fa-solid fa-clipboard-list"></i> 提取结果</label>
+            <textarea id="results-container" class="form-control" rows="10" readonly></textarea>
+            <button id="copy-button" class="btn btn-secondary mt-3 w-100 d-none">
+                <span class="copy-text"><i class="fa-solid fa-copy me-2"></i>复制全部链接</span>
             </button>
-        </div>
-        
-        <div class="text-center mt-3">
-            <small class="text-white-50">基于 v2rayn-extractor 修改</small>
         </div>
     </div>
 
     <script>
         const form = document.getElementById('node-form');
+        const urlRadio = document.getElementById('url-radio');
+        const fileRadio = document.getElementById('file-radio');
+        const urlInputGroup = document.getElementById('url-input-group');
+        const fileInputGroup = document.getElementById('file-input-group');
         const processButton = document.getElementById('process-button');
+        const buttonText = processButton.querySelector('.button-text');
+        const buttonSpinner = processButton.querySelector('.spinner-border');
         const resultsContainer = document.getElementById('results-container');
+        const copyButton = document.getElementById('copy-button');
+        const copyButtonText = copyButton.querySelector('.copy-text');
+
+        urlRadio.addEventListener('change', () => {
+            if (urlRadio.checked) {
+                urlInputGroup.style.display = 'block';
+                fileInputGroup.style.display = 'none';
+            }
+        });
+        fileRadio.addEventListener('change', () => {
+            if (fileRadio.checked) {
+                urlInputGroup.style.display = 'none';
+                fileInputGroup.style.display = 'block';
+            }
+        });
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
-            // 在这里可以放置您原有的表单提交逻辑
-            resultsContainer.value = "功能逻辑部分请参考之前的JS代码...";
-            alert('这是一个UI演示，实际的功能逻辑需要您结合之前的JS代码进行填充。');
+            processButton.disabled = true;
+            buttonText.classList.add('d-none');
+            buttonSpinner.classList.remove('d-none');
+            resultsContainer.value = '正在获取和解析数据...';
+            copyButton.classList.add('d-none');
+            
+            const formData = new FormData(form);
+
+            try {
+                const response = await fetch('/api/extract', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const resultText = await response.text();
+                if (!response.ok) {
+                   throw new Error(resultText);
+                }
+                resultsContainer.value = resultText || "未提取到任何有效节点。";
+                if(resultText && !resultText.startsWith("错误")) {
+                    copyButton.classList.remove('d-none');
+                }
+            } catch (error) {
+                resultsContainer.value = `错误: ${error.message}`;
+            } finally {
+                processButton.disabled = false;
+                buttonText.classList.remove('d-none');
+                buttonSpinner.classList.add('d-none');
+            }
+        });
+
+        copyButton.addEventListener('click', () => {
+            if (!resultsContainer.value) return;
+            resultsContainer.select();
+            document.execCommand('copy');
+            
+            copyButtonText.innerHTML = '<i class="fa-solid fa-check"></i> 已复制!';
+            copyButton.classList.replace('btn-secondary', 'btn-success');
+
+            setTimeout(() => {
+                copyButtonText.innerHTML = '<i class="fa-solid fa-copy"></i> 复制全部链接';
+                copyButton.classList.replace('btn-success', 'btn-secondary');
+            }, 2000);
         });
     </script>
 </body>
