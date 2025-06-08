@@ -14,12 +14,14 @@
     
     <style>
         :root {
-            --primary-color: #3B82F6; /* 定义一个主色调，方便统一修改 */
-            --primary-color-hover: #2563EB;
+            /* [修改] 配合新背景，将主色调从蓝色改为靛蓝色 */
+            --primary-color: #6366F1;
+            --primary-color-hover: #4F46E5;
         }
 
         body {
-            background-image: url('https://images.pexels.com/photos/3785424/pexels-photo-3785424.jpeg?auto=compress&cs=tinysrgb&w=1920');
+            /* [修改] 更换了一张新的动漫夜景背景图 */
+            background-image: url('https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1920');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -31,26 +33,24 @@
             min-height: 100vh;
             padding: 1rem;
             
-            /* [修改] 使用新的UI字体 */
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         
-        /* 卡片效果 */
         .glass-card {
-            background: rgba(30, 30, 45, 0.6); /* [修改] 加深背景，提高对比度 */
-            backdrop-filter: blur(25px); /* [修改] 增强模糊效果 */
+            background: rgba(30, 30, 45, 0.6);
+            backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1.5rem;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-            max-width: 550px;
+            
+            /* [修改] 增加卡片宽度 */
+            max-width: 640px;
             width: 100%;
             color: #fff;
             
-            /* [新增] 为卡片内的所有文字添加柔和阴影，增强可读性 */
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
-        /* 自定义表单控件 */
         .form-control, .form-select, .form-check-input:checked {
             background-color: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -61,7 +61,7 @@
         .form-control:focus, .form-select:focus {
             background-color: rgba(0, 0, 0, 0.3);
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
             color: #fff;
         }
         .form-floating > label { color: #aaa; }
@@ -74,7 +74,6 @@
              border-color: var(--primary-color);
         }
 
-        /* 自定义按钮 */
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
@@ -83,17 +82,15 @@
         .btn-primary:hover {
             background-color: var(--primary-color-hover);
             border-color: var(--primary-color-hover);
-            transform: translateY(-2px); /* [新增] 悬停时轻微上浮 */
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
         .btn-secondary {
             background-color: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.2);
         }
 
-        /* 结果文本域 */
         #results-container {
-            /* [修改] 使用更适合代码的等宽字体 */
             font-family: 'JetBrains Mono', monospace;
             background-color: rgba(0,0,0,0.3);
             border-color: rgba(255, 255, 255, 0.15);
