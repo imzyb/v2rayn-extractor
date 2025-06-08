@@ -14,43 +14,33 @@
     
     <style>
         :root {
-            /* [修改] 配合新背景，将主色调从蓝色改为靛蓝色 */
             --primary-color: #6366F1;
             --primary-color-hover: #4F46E5;
         }
-
         body {
-            /* [修改] 更换了一张新的动漫夜景背景图 */
             background-image: url('https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1920');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 1rem;
-            
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
-        
         .glass-card {
             background: rgba(30, 30, 45, 0.6);
             backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 1.5rem;
             box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
-            
-            /* [修改] 增加卡片宽度 */
             max-width: 640px;
             width: 100%;
             color: #fff;
-            
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-
         .form-control, .form-select, .form-check-input:checked {
             background-color: rgba(0, 0, 0, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.15);
@@ -73,7 +63,6 @@
              background-color: var(--primary-color);
              border-color: var(--primary-color);
         }
-
         .btn-primary {
             background-color: var(--primary-color);
             border-color: var(--primary-color);
@@ -89,7 +78,6 @@
             background-color: rgba(255, 255, 255, 0.1);
             border-color: rgba(255, 255, 255, 0.2);
         }
-
         #results-container {
             font-family: 'JetBrains Mono', monospace;
             background-color: rgba(0,0,0,0.3);
@@ -160,16 +148,21 @@
         const copyButton = document.getElementById('copy-button');
         const copyButtonText = copyButton.querySelector('.copy-text');
 
+        // 当“订阅链接”被选择时
         urlRadio.addEventListener('change', () => {
             if (urlRadio.checked) {
-                urlInputGroup.style.display = 'block';
-                fileInputGroup.style.display = 'none';
+                // 使用 classList.remove/add 来控制显示和隐藏
+                urlInputGroup.classList.remove('d-none');
+                fileInputGroup.classList.add('d-none');
             }
         });
+
+        // 当“YAML 文件”被选择时
         fileRadio.addEventListener('change', () => {
             if (fileRadio.checked) {
-                urlInputGroup.style.display = 'none';
-                fileInputGroup.style.display = 'block';
+                // 使用 classList.remove/add 来控制显示和隐藏
+                urlInputGroup.classList.add('d-none');
+                fileInputGroup.classList.remove('d-none');
             }
         });
 
