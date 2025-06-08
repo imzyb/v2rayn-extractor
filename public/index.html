@@ -10,18 +10,37 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     
     <style>
+        /* [新增] 为body添加一个漂亮的、动态的渐变背景 */
         body {
             padding: 2rem;
+            background: linear-gradient(135deg, rgba(31,0,92,1) 0%, rgba(156,0,92,1) 50%, rgba(255,0,85,1) 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
         }
-        .results-card {
-            background-color: rgba(255, 255, 255, 0.05);
+
+        /* [新增] 背景滚动的动画效果 */
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
+        
+        /* [修改] 卡片的核心玻璃效果 */
+        .card {
+            background: rgba(30, 30, 40, 0.45); /* 半透明背景 */
+            backdrop-filter: blur(10px); /* 关键：背景模糊，产生磨砂玻璃效果 */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem; /* 更圆润的边角 */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
         #results-container {
             font-family: monospace;
             white-space: pre;
             overflow-wrap: break-word;
-            background-color: transparent;
-            border: none;
+            background-color: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #EAEAEA;
         }
     </style>
@@ -33,10 +52,10 @@
             <p class="lead text-body-secondary">输入订阅链接或上传YAML配置文件，以提取分享链接。</p>
         </div>
 
-        <div class="card results-card border-primary">
-            <div class="card-body">
+        <div class="card">
+            <div class="card-body p-md-5">
                 <form id="node-form">
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label class="form-label"><i class="fa-solid fa-list-check"></i> 输入方式</label>
                         <div>
                             <div class="form-check form-check-inline">
@@ -50,14 +69,14 @@
                         </div>
                     </div>
                     
-                    <div class="mb-3" id="url-input-group">
+                    <div class="mb-4" id="url-input-group">
                         <div class="form-floating">
                             <input type="url" class="form-control" id="url-input" name="url" placeholder="https://example.com/sub/...">
                             <label for="url-input"><i class="fa-solid fa-link"></i> 在此输入订阅链接</label>
                         </div>
                     </div>
 
-                    <div class="mb-3" id="file-input-group" style="display: none;">
+                    <div class="mb-4" id="file-input-group" style="display: none;">
                          <label for="file-input" class="form-label"><i class="fa-solid fa-file-arrow-up"></i> 选择 YAML 文件</label>
                         <input type="file" class="form-control" id="file-input" name="file" accept=".yaml,.yml">
                     </div>
@@ -71,7 +90,7 @@
                 <hr class="my-4">
 
                 <h4><i class="fa-solid fa-clipboard-list"></i> 提取结果</h4>
-                <div class="p-3 border rounded results-card">
+                <div class="p-3 border rounded">
                     <textarea id="results-container" class="form-control" rows="10" readonly>您的分享链接将显示在这里...</textarea>
                 </div>
                  <button id="copy-button" class="btn btn-success mt-3 w-100 d-none">
