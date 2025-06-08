@@ -1,18 +1,17 @@
 const express = require('express');
 const multer = require('multer');
 const yaml = require('js-yaml');
-const axios = require('axios'); // 用于从URL获取订阅内容
+const axios = require('axios');
 const path = require('path');
-const { URLSearchParams } = require('url'); // Node.js 内置
-const { Buffer } = require('buffer'); // Node.js 内置
+const { URLSearchParams } = require('url');
+const { Buffer } = require('buffer');
 
 const app = express();
 const port = 3000;
 
-// 使用 multer 来处理文件上传。'file' 是前端 input 标签的 name。
 const upload = multer({ storage: multer.memoryStorage() });
 
-// --- 核心逻辑函数 (从我们之前的JS代码迁移过来) ---
+// --- 核心逻辑函数 ---
 
 function extractNodesFromYamlContent(content) {
     try {
@@ -65,59 +64,57 @@ function generateShareLinks(nodes) {
     return shareLinks.join('\n');
 }
 
-// --- API 路由和静态文件服务 ---
+// --- API 路由 ---
 
-// 1. 提供静态文件服务 (将 public 目录下的文件作为网站内容)
-app.use(express.static(path.join(__dirname, 'public')));
-
-// 2. 创建 API 接口，用于处理节点提取请求
-// 我们使用 upload.single('file') 来接收上传的文件
+// Vercel 会自动处理静态文件，这里我们只定义 API
 app.post('/api/extract', upload.single('file'), async (req, res) => {
-    const { inputType, url } = req.body;
-    let content = '';
+    // 注意: Vercel 需要 express.urlencoded() 来解析表单的 URL 部分
+    express.urlencoded({ extended: true })(req, res, async () => {
+        const { inputType, url } = req.body;
+        let content = '';
 
-    try {
-        if (inputType === 'url') {
-            if (!url) {
-                return res.status(400).send('错误：未提供URL。');
-            }
-            const response = await axios.get(url, { headers: { 'User-Agent': 'Clash' } });
-            content = response.data;
-        } else if (inputType === 'file') {
-            if (!req.file) {
-                return res.status(400).send('错误：未提供文件。');
-            }
-            content = req.file.buffer.toString('utf8');
-        } else {
-            return res.status(400).send('错误：无效的输入类型。');
-        }
-
-        let nodes = [];
         try {
-            nodes = extractNodesFromYamlContent(Buffer.from(content, 'base64').toString('utf8'));
-        } catch (e) {
-            nodes = extractNodesFromYamlContent(content);
-        }
-        
-        if (nodes.length === 0) {
-             nodes = extractNodesFromYamlContent(content);
-        }
+            if (inputType === 'url') {
+                if (!url) return res.status(400).send('错误：未提供URL。');
+                const response = await axios.get(url, { headers: { 'User-Agent': 'Clash' } });
+                content = response.data;
+            } else if (inputType === 'file') {
+                if (!req.file) return res.status(400).send('错误：未提供文件。');
+                content = req.file.buffer.toString('utf8');
+            } else {
+                return res.status(400).send('错误：无效的输入类型。');
+            }
 
-        if (nodes.length === 0) {
-            return res.status(400).send('错误：在提供的数据中未能找到任何代理节点。');
+            let nodes = [];
+            try {
+                nodes = extractNodesFromYamlContent(Buffer.from(content, 'base64').toString('utf8'));
+            } catch (e) {
+                nodes = extractNodesFromYamlContent(content);
+            }
+            
+            if (nodes.length === 0) {
+                 nodes = extractNodesFromYamlContent(content);
+            }
+
+            if (nodes.length === 0) {
+                return res.status(400).send('错误：在提供的数据中未能找到任何代理节点。');
+            }
+
+            const shareLinks = generateShareLinks(nodes);
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+            res.status(200).send(shareLinks);
+
+        } catch (error) {
+            console.error('处理错误:', error.message);
+            res.status(500).send(`服务器错误: ${error.message}`);
         }
-
-        const shareLinks = generateShareLinks(nodes);
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.status(200).send(shareLinks);
-
-    } catch (error) {
-        console.error('处理错误:', error.message);
-        res.status(500).send(`服务器错误: ${error.message}`);
-    }
+    });
 });
 
-// 启动服务器
-app.listen(port, () => {
-    console.log(`服务器正在 http://localhost:${port} 上运行`);
-});
+// 在本地开发时，需要一个根路由来提供index.html
+if (process.env.VERCEL !== '1') {
+    app.use(express.static(path.join(__dirname, 'public')));
+}
+
+// 导出 app 供 Vercel 使用
+module.exports = app;
