@@ -62,10 +62,14 @@ function generateShareLinks(nodes) {
                 };
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
+            
+            // [BUG修复] 修正 Shadowsocks (ss) 的 Base64 编码方式
             } else if ((type === 'ss' || type === 'shadowsocks') && node.cipher && node.password) {
                 const credentials = `${node.cipher}:${node.password}`;
-                const encodedCreds = Buffer.from(credentials).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+                // 使用最标准、带 padding 的 Base64 编码，不再手动替换任何字符
+                const encodedCreds = Buffer.from(credentials).toString('base64');
                 link = `ss://${encodedCreds}@${server}:${port}#${remarks}`;
+
             } else if (type === 'trojan' && node.password && server && port) {
                 const params = new URLSearchParams();
                 if (node.sni || node.servername) params.set('sni', node.sni || node.servername);
@@ -77,8 +81,7 @@ function generateShareLinks(nodes) {
                 }
                 link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
-            // [最终修改] 不再为 hysteria(一代) 生成链接，只为 hysteria2 生成
-            } else if (type === 'hysteria2' && server && port) {
+            } else if (type === 'hysteria2' && server && port) { // 只处理 hysteria2
                  const auth = node.auth || node.auth_str || node.password;
                  if(auth) {
                     const params = new URLSearchParams();
@@ -101,8 +104,6 @@ function generateShareLinks(nodes) {
             }
             
             if (link) {
-                // 为生成的链接附加原始类型，方便统计
-                link.originalType = type;
                 shareLinks.push(link);
             }
         } catch (e) { console.error(`为节点 ${node.name} 生成链接时失败:`, e); }
@@ -164,7 +165,7 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
             `---`,
             `成功生成 ${extractedNodesCount} 个链接 / 共发现 ${totalNodes} 个节点。`,
             `分类统计: ${countDetails}`,
-            `提示: V2RayN等客户端可能仅支持部分协议链接的导入。本工具已跳过对 Hysteria (一代) 等不兼容协议的处理。`
+            `提示: 部分客户端可能仅支持 VLESS, VMess, SS, Trojan 等协议的链接导入。`
         ].join('\n');
         
         const responseBody = shareLinks.join('\n') + '\n\n' + summary;
