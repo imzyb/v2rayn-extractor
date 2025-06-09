@@ -11,8 +11,6 @@ const port = 3000;
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-// --- 核心逻辑函数 ---
-
 function extractNodesFromYamlContent(content) {
     try {
         const data = yaml.load(content);
@@ -35,7 +33,6 @@ function generateShareLinks(nodes) {
             if (type === 'vless' && node.uuid && server && port) {
                 const params = new URLSearchParams();
                 if (node.network) params.set('type', node.network);
-
                 if (node.tls) {
                     if (node['reality-opts'] && node['reality-opts']['public-key']) {
                         params.set('security', 'reality');
@@ -45,22 +42,17 @@ function generateShareLinks(nodes) {
                         params.set('security', 'tls');
                     }
                 }
-                
                 if (node.flow) params.set('flow', node.flow);
                 if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
                 if (node.servername || node.sni) params.set('sni', node.servername || node.sni);
-
                 if (node.network === 'ws' && node['ws-opts']) {
                     if (node['ws-opts']['path']) params.set('path', node['ws-opts']['path']);
                     if (node['ws-opts']['headers'] && node['ws-opts']['headers']['Host']) params.set('host', node['ws-opts']['headers']['Host']);
                 }
-                
                 if (node.network === 'grpc' && node['grpc-opts']) {
                     if (node['grpc-opts']['grpc-service-name']) params.set('serviceName', node['grpc-opts']['grpc-service-name']);
                 }
-
                 link = `vless://${node.uuid}@${server}:${port}?${params.toString()}#${remarks}`;
-
             } else if (type === 'vmess') {
                 const vmessConfig = {
                     v: '2', ps: node.name || 'N/A', add: server, port: port, id: node.uuid,
@@ -70,27 +62,22 @@ function generateShareLinks(nodes) {
                 };
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
-
-            } else if (type === 'ss' && node.cipher && node.password) {
+            } else if ((type === 'ss' || type === 'shadowsocks') && node.cipher && node.password) {
                 const credentials = `${node.cipher}:${node.password}`;
                 const encodedCreds = Buffer.from(credentials).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
                 link = `ss://${encodedCreds}@${server}:${port}#${remarks}`;
-
             } else if (type === 'trojan' && node.password && server && port) {
                 const params = new URLSearchParams();
                 if (node.sni || node.servername) params.set('sni', node.sni || node.servername);
                 if (node.alpn?.length) params.set('alpn', node.alpn.join(','));
-                
-                // [BUG修复] 为 trojan 增加 ws 支持
                 if (node.network === 'ws' && node['ws-opts']) {
                     params.set('type', 'ws');
                     if (node['ws-opts']['path']) params.set('path', node['ws-opts']['path']);
-                    if (node['ws-opts']['headers'] && node['ws-opts']['headers']['Host']) {
-                        params.set('host', node['ws-opts']['headers']['Host']);
-                    }
+                    if (node['ws-opts']['headers'] && node['ws-opts']['headers']['Host']) params.set('host', node['ws-opts']['headers']['Host']);
                 }
                 link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
+            // [BUG修复] 修正 Hysteria/Hysteria2 链接格式
             } else if ((type === 'hysteria' || type === 'hysteria2') && server && port) {
                  const auth = node.auth || node.auth_str || node.password;
                  if(auth) {
@@ -101,10 +88,13 @@ function generateShareLinks(nodes) {
                     if (node.down) params.set('down', node.down.toString().replace(/\s*mbps\s*/i, ''));
                     if (node.obfs) params.set('obfs', node.obfs);
                     if (node['obfs-password']) params.set('obfs-password', node['obfs-password']);
-                    link = `${type}://${server}:${port}?auth=${encodeURIComponent(auth)}&${params.toString()}`;
+                    if (node.alpn?.length) params.set('alpn', node.alpn.join(','));
+
+                    // 修正后的链接格式
+                    link = `${type}://${encodeURIComponent(auth)}@${server}:${port}?${params.toString()}#${remarks}`;
                  }
                  
-            } else if (type === 'http' && server && port) { // [新增] 增加对 http 代理的支持
+            } else if (type === 'http' && server && port) {
                 let authPart = '';
                 if (node.username && node.password) {
                     authPart = `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password)}@`;
@@ -155,11 +145,27 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
 
         const shareLinks = generateShareLinks(nodes);
         
-        // [新增] 增加统计功能
         const totalNodes = nodes.length;
-        const extractedNodes = shareLinks.length;
-        const summary = `\n\n---\n成功提取 ${extractedNodes} 个节点 / 共发现 ${totalNodes} 个节点。`;
-        const responseBody = shareLinks.join('\n') + summary;
+        const extractedNodesCount = shareLinks.length;
+        
+        const protocolCounts = nodes.reduce((acc, node) => {
+            const type = (node.type || 'unknown').toLowerCase();
+            acc[type] = (acc[type] || 0) + 1;
+            return acc;
+        }, {});
+
+        const countDetails = Object.entries(protocolCounts)
+            .map(([protocol, count]) => `${protocol.toUpperCase()}: ${count}`)
+            .join(', ');
+
+        const summary = [
+            `---`,
+            `成功生成 ${extractedNodesCount} 个链接 / 共发现 ${totalNodes} 个节点。`,
+            `分类统计: ${countDetails}`,
+            `注意: V2RayN 客户端可能仅支持 VLESS, VMess, SS, Trojan 等部分协议的链接导入。`
+        ].join('\n');
+        
+        const responseBody = shareLinks.join('\n') + '\n\n' + summary;
 
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.status(200).send(responseBody);
