@@ -63,10 +63,11 @@ function generateShareLinks(nodes) {
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
             
-            // [BUG修复] 修正 Shadowsocks (ss) 的 Base64 编码方式
+            // [最终BUG修复] 对密码本身进行URL编码，再进行Base64
             } else if ((type === 'ss' || type === 'shadowsocks') && node.cipher && node.password) {
-                const credentials = `${node.cipher}:${node.password}`;
-                // 使用最标准、带 padding 的 Base64 编码，不再手动替换任何字符
+                // 先对密码进行URL编码，处理特殊字符
+                const safePassword = encodeURIComponent(node.password);
+                const credentials = `${node.cipher}:${safePassword}`;
                 const encodedCreds = Buffer.from(credentials).toString('base64');
                 link = `ss://${encodedCreds}@${server}:${port}#${remarks}`;
 
@@ -81,7 +82,7 @@ function generateShareLinks(nodes) {
                 }
                 link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
-            } else if (type === 'hysteria2' && server && port) { // 只处理 hysteria2
+            } else if (type === 'hysteria2' && server && port) {
                  const auth = node.auth || node.auth_str || node.password;
                  if(auth) {
                     const params = new URLSearchParams();
@@ -165,7 +166,7 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
             `---`,
             `成功生成 ${extractedNodesCount} 个链接 / 共发现 ${totalNodes} 个节点。`,
             `分类统计: ${countDetails}`,
-            `提示: 部分客户端可能仅支持 VLESS, VMess, SS, Trojan 等协议的链接导入。`
+            `提示: 部分客户端可能仅支持 VLESS, VMess, SS, Trojan, Hysteria2 等协议的链接导入。`
         ].join('\n');
         
         const responseBody = shareLinks.join('\n') + '\n\n' + summary;
