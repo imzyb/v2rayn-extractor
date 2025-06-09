@@ -22,7 +22,6 @@ function extractNodesFromYamlContent(content) {
     }
 }
 
-// [重要修改] 更新了 VLESS 节点的生成逻辑
 function generateShareLinks(nodes) {
     const shareLinks = [];
     for (const node of nodes) {
@@ -35,55 +34,31 @@ function generateShareLinks(nodes) {
 
             if (type === 'vless' && node.uuid && server && port) {
                 const params = new URLSearchParams();
-                
-                // 处理 network
-                if (node.network) {
-                    params.set('type', node.network);
-                }
+                if (node.network) params.set('type', node.network);
 
-                // 处理 security (tls, reality)
                 if (node.tls) {
-                    // 检查是否存在 reality-opts 来判断是 tls 还是 reality
                     if (node['reality-opts'] && node['reality-opts']['public-key']) {
                         params.set('security', 'reality');
-                        // 处理 reality 参数
-                        if (node['reality-opts']['public-key']) {
-                            params.set('pbk', node['reality-opts']['public-key']);
-                        }
-                        if (node['reality-opts']['short-id']) {
-                            params.set('sid', node['reality-opts']['short-id']);
-                        }
+                        if (node['reality-opts']['public-key']) params.set('pbk', node['reality-opts']['public-key']);
+                        if (node['reality-opts']['short-id']) params.set('sid', node['reality-opts']['short-id']);
                     } else {
                         params.set('security', 'tls');
                     }
                 }
                 
-                // 处理 flow
-                if (node.flow) {
-                    params.set('flow', node.flow);
-                }
+                if (node.flow) params.set('flow', node.flow);
+                if (node['client-fingerprint']) params.set('fp', node['client-fingerprint']);
+                if (node.servername || node.sni) params.set('sni', node.servername || node.sni);
 
-                // 处理 fingerprint
-                if (node['client-fingerprint']) {
-                    params.set('fp', node['client-fingerprint']);
-                }
-
-                // 处理 sni
-                if (node.servername || node.sni) {
-                    params.set('sni', node.servername || node.sni);
-                }
-
-                // 处理 WebSocket (ws) 参数
                 if (node.network === 'ws' && node['ws-opts']) {
-                    if (node['ws-opts']['path']) {
-                        params.set('path', node['ws-opts']['path']);
-                    }
-                    if (node['ws-opts']['headers'] && node['ws-opts']['headers']['Host']) {
-                        params.set('host', node['ws-opts']['headers']['Host']);
-                    }
+                    if (node['ws-opts']['path']) params.set('path', node['ws-opts']['path']);
+                    if (node['ws-opts']['headers'] && node['ws-opts']['headers']['Host']) params.set('host', node['ws-opts']['headers']['Host']);
+                }
+                
+                if (node.network === 'grpc' && node['grpc-opts']) {
+                    if (node['grpc-opts']['grpc-service-name']) params.set('serviceName', node['grpc-opts']['grpc-service-name']);
                 }
 
-                // 基础链接
                 link = `vless://${node.uuid}@${server}:${port}?${params.toString()}#${remarks}`;
 
             } else if (type === 'vmess') {
@@ -96,7 +71,7 @@ function generateShareLinks(nodes) {
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
 
-            } else if ((type === 'ss' || type === 'shadowsocks') && node.cipher && node.password) {
+            } else if (type === 'ss' && node.cipher && node.password) {
                 const credentials = `${node.cipher}:${node.password}`;
                 const encodedCreds = Buffer.from(credentials).toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
                 link = `ss://${encodedCreds}@${server}:${port}#${remarks}`;
@@ -105,7 +80,16 @@ function generateShareLinks(nodes) {
                 const params = new URLSearchParams();
                 if (node.sni || node.servername) params.set('sni', node.sni || node.servername);
                 if (node.alpn?.length) params.set('alpn', node.alpn.join(','));
-                link = `trojan://${node.password}@${server}:${port}?${params.toString()}#${remarks}`;
+                
+                // [BUG修复] 为 trojan 增加 ws 支持
+                if (node.network === 'ws' && node['ws-opts']) {
+                    params.set('type', 'ws');
+                    if (node['ws-opts']['path']) params.set('path', node['ws-opts']['path']);
+                    if (node['ws-opts']['headers'] && node['ws-opts']['headers']['Host']) {
+                        params.set('host', node['ws-opts']['headers']['Host']);
+                    }
+                }
+                link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
             } else if ((type === 'hysteria' || type === 'hysteria2') && server && port) {
                  const auth = node.auth || node.auth_str || node.password;
@@ -117,18 +101,22 @@ function generateShareLinks(nodes) {
                     if (node.down) params.set('down', node.down.toString().replace(/\s*mbps\s*/i, ''));
                     if (node.obfs) params.set('obfs', node.obfs);
                     if (node['obfs-password']) params.set('obfs-password', node['obfs-password']);
-
-                    const query = Array.from(params.entries()).filter(([_, v]) => v).map(([k, v]) => `${k}=${v}`).join('&');
-                    link = `${type}://${server}:${port}?${query}#${remarks}`;
+                    link = `${type}://${server}:${port}?auth=${encodeURIComponent(auth)}&${params.toString()}`;
                  }
+                 
+            } else if (type === 'http' && server && port) { // [新增] 增加对 http 代理的支持
+                let authPart = '';
+                if (node.username && node.password) {
+                    authPart = `${encodeURIComponent(node.username)}:${encodeURIComponent(node.password)}@`;
+                }
+                link = `http://${authPart}${server}:${port}#${remarks}`;
             }
             
             if (link) shareLinks.push(link);
         } catch (e) { console.error(`为节点 ${node.name} 生成链接时失败:`, e); }
     }
-    return shareLinks.join('\n');
+    return shareLinks;
 }
-
 
 // --- API 路由 ---
 
@@ -166,14 +154,22 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
         }
 
         const shareLinks = generateShareLinks(nodes);
+        
+        // [新增] 增加统计功能
+        const totalNodes = nodes.length;
+        const extractedNodes = shareLinks.length;
+        const summary = `\n\n---\n成功提取 ${extractedNodes} 个节点 / 共发现 ${totalNodes} 个节点。`;
+        const responseBody = shareLinks.join('\n') + summary;
+
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-        res.status(200).send(shareLinks);
+        res.status(200).send(responseBody);
 
     } catch (error) {
         console.error('处理错误:', error.message);
         res.status(500).send(`服务器错误: ${error.message}`);
     }
 });
+
 
 // 在本地开发时，需要一个根路由来提供index.html
 if (process.env.VERCEL !== '1') {
