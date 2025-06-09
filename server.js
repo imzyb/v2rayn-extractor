@@ -77,8 +77,8 @@ function generateShareLinks(nodes) {
                 }
                 link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
-            // [BUG修复] 修正 Hysteria/Hysteria2 链接格式
-            } else if ((type === 'hysteria' || type === 'hysteria2') && server && port) {
+            // [最终修改] 不再为 hysteria(一代) 生成链接，只为 hysteria2 生成
+            } else if (type === 'hysteria2' && server && port) {
                  const auth = node.auth || node.auth_str || node.password;
                  if(auth) {
                     const params = new URLSearchParams();
@@ -89,9 +89,7 @@ function generateShareLinks(nodes) {
                     if (node.obfs) params.set('obfs', node.obfs);
                     if (node['obfs-password']) params.set('obfs-password', node['obfs-password']);
                     if (node.alpn?.length) params.set('alpn', node.alpn.join(','));
-
-                    // 修正后的链接格式
-                    link = `${type}://${encodeURIComponent(auth)}@${server}:${port}?${params.toString()}#${remarks}`;
+                    link = `hysteria2://${encodeURIComponent(auth)}@${server}:${port}?${params.toString()}#${remarks}`;
                  }
                  
             } else if (type === 'http' && server && port) {
@@ -102,7 +100,11 @@ function generateShareLinks(nodes) {
                 link = `http://${authPart}${server}:${port}#${remarks}`;
             }
             
-            if (link) shareLinks.push(link);
+            if (link) {
+                // 为生成的链接附加原始类型，方便统计
+                link.originalType = type;
+                shareLinks.push(link);
+            }
         } catch (e) { console.error(`为节点 ${node.name} 生成链接时失败:`, e); }
     }
     return shareLinks;
@@ -162,7 +164,7 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
             `---`,
             `成功生成 ${extractedNodesCount} 个链接 / 共发现 ${totalNodes} 个节点。`,
             `分类统计: ${countDetails}`,
-            `注意: V2RayN 客户端可能仅支持 VLESS, VMess, SS, Trojan 等部分协议的链接导入。`
+            `提示: V2RayN等客户端可能仅支持部分协议链接的导入。本工具已跳过对 Hysteria (一代) 等不兼容协议的处理。`
         ].join('\n');
         
         const responseBody = shareLinks.join('\n') + '\n\n' + summary;
