@@ -66,9 +66,11 @@ function generateShareLinks(nodes) {
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
             
-            } else if ((type === 'ss' || type === 'shadowsocks') && node.cipher && node.password) {
+            // [BUG修复] 兼容 'cipher' 和 'method' 字段
+            } else if ((type === 'ss' || type === 'shadowsocks') && (node.cipher || node.method) && node.password) {
+                const cipher = node.cipher || node.method; // 优先使用 cipher，否则使用 method
                 const safePassword = encodeURIComponent(node.password);
-                const credentials = `${node.cipher}:${safePassword}`;
+                const credentials = `${cipher}:${safePassword}`;
                 const encodedCreds = Buffer.from(credentials).toString('base64');
                 link = `ss://${encodedCreds}@${server}:${port}#${remarks}`;
 
@@ -83,12 +85,10 @@ function generateShareLinks(nodes) {
                 }
                 link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
-            // 新增: 处理您提供的特定 Hysteria (v1) JSON 格式
             } else if (type === 'hysteria' && server && port) {
                 const auth = node.auth_str || node.auth || node.password;
                 if(auth){
                     const params = new URLSearchParams();
-                    // 从 tls 对象或顶层读取 sni 和 alpn
                     const sni = node.tls?.server_name || node.sni || node.servername;
                     const insecure = node.tls?.insecure || node['skip-cert-verify'];
                     const alpn = node.tls?.alpn || node.alpn;
@@ -97,24 +97,20 @@ function generateShareLinks(nodes) {
                     if(insecure) params.set('insecure', '1');
                     if (alpn?.length) params.set('alpn', alpn.join(','));
 
-                    // 兼容 up_mbps 和 down_mbps
                     const up = node.up_mbps || node.up;
                     const down = node.down_mbps || node.down;
                     if(up) params.set('upmbps', up.toString().replace(/\s*mbps\s*/i, ''));
                     if(down) params.set('downmbps', down.toString().replace(/\s*mbps\s*/i, ''));
                     
-                    // V2RayN 的 hy2 格式不支持 obfs
                     link = `hy2://${encodeURIComponent(auth)}@${server}:${port}?${params.toString()}#${remarks}`;
                 }
             
-            // 原有的 Hysteria2 逻辑, 用于处理 Clash YAML 格式
             } else if (type === 'hysteria2' && server && port) {
                  const auth = node.auth || node.auth_str || node.password;
                  if(auth) {
                     const params = new URLSearchParams();
                     params.set('sni', node.sni || node.servername || '');
                     if (node['skip-cert-verify']) params.set('insecure', '1');
-                    // V2RayN 通常使用 upmbps, downmbps
                     if (node.up) params.set('upmbps', node.up.toString().replace(/\s*mbps\s*/i, ''));
                     if (node.down) params.set('downmbps', node.down.toString().replace(/\s*mbps\s*/i, ''));
                     if (node.obfs) params.set('obfs', node.obfs);
@@ -149,7 +145,6 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
         if (inputType === 'url') {
             if (!url) return res.status(400).send('错误：未提供URL。');
             const response = await axios.get(url, { headers: { 'User-Agent': 'Clash' } });
-            // 尝试 base64 解码, 如果失败则使用原文
             try {
                 nodes = extractNodesFromYamlContent(Buffer.from(response.data, 'base64').toString('utf8'));
             } catch (e) {
@@ -163,7 +158,6 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
             if (!json_input) return res.status(400).send('错误：未提供JSON输入。');
             try {
                 const parsedJson = JSON.parse(json_input);
-                // 确保 nodes 是一个数组
                 nodes = Array.isArray(parsedJson) ? parsedJson : [parsedJson];
             } catch (e) {
                 return res.status(400).send(`错误：JSON格式无效。 ${e.message}`);
