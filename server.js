@@ -9,7 +9,6 @@ const { Buffer } = require('buffer');
 const app = express();
 const port = 3000;
 
-// 由于前端不用 application/json, Express 无法自动解析, multer 用于处理 form-data
 const upload = multer({ storage: multer.memoryStorage() });
 
 function extractNodesFromYamlContent(content) {
@@ -17,7 +16,6 @@ function extractNodesFromYamlContent(content) {
         const data = yaml.load(content);
         return (data && data.proxies && Array.isArray(data.proxies)) ? data.proxies : [];
     } catch (e) {
-        // 如果 YAML 解析失败，返回空数组
         return [];
     }
 }
@@ -30,7 +28,6 @@ function generateShareLinks(nodes) {
             const type = (node.type || '').toLowerCase();
             const remarks = encodeURIComponent(node.name || node.tag || 'N/A');
             const server = node.server;
-            // 兼容 server_port 和 port
             const port = node.port || node.server_port;
 
             if (type === 'vless' && node.uuid && server && port) {
@@ -66,11 +63,11 @@ function generateShareLinks(nodes) {
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
             
-            // [BUG修复] 兼容 'cipher' 和 'method' 字段
+            // [FINAL BUG FIX] Correctly handle SS URL generation. Do not URL-encode the password before Base64 encoding.
             } else if ((type === 'ss' || type === 'shadowsocks') && (node.cipher || node.method) && node.password) {
-                const cipher = node.cipher || node.method; // 优先使用 cipher，否则使用 method
-                const safePassword = encodeURIComponent(node.password);
-                const credentials = `${cipher}:${safePassword}`;
+                const cipher = node.cipher || node.method;
+                // The format is BASE64(method:password). The password itself should not be encoded.
+                const credentials = `${cipher}:${node.password}`;
                 const encodedCreds = Buffer.from(credentials).toString('base64');
                 link = `ss://${encodedCreds}@${server}:${port}#${remarks}`;
 
