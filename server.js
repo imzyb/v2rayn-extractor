@@ -9,6 +9,7 @@ const { Buffer } = require('buffer');
 const app = express();
 const port = 3000;
 
+// 由于前端不用 application/json, Express 无法自动解析, multer 用于处理 form-data
 const upload = multer({ storage: multer.memoryStorage() });
 
 function extractNodesFromYamlContent(content) {
@@ -16,6 +17,7 @@ function extractNodesFromYamlContent(content) {
         const data = yaml.load(content);
         return (data && data.proxies && Array.isArray(data.proxies)) ? data.proxies : [];
     } catch (e) {
+        // 如果 YAML 解析失败，返回空数组
         return [];
     }
 }
@@ -26,9 +28,10 @@ function generateShareLinks(nodes) {
         let link = '';
         try {
             const type = (node.type || '').toLowerCase();
-            const remarks = encodeURIComponent(node.name || 'N/A');
+            const remarks = encodeURIComponent(node.name || node.tag || 'N/A');
             const server = node.server;
-            const port = node.port;
+            // 兼容 server_port 和 port
+            const port = node.port || node.server_port;
 
             if (type === 'vless' && node.uuid && server && port) {
                 const params = new URLSearchParams();
@@ -63,9 +66,7 @@ function generateShareLinks(nodes) {
                 const jsonConfig = JSON.stringify(Object.fromEntries(Object.entries(vmessConfig).filter(([_, v]) => v)));
                 link = `vmess://${Buffer.from(jsonConfig).toString('base64')}`;
             
-            // [最终BUG修复] 对密码本身进行URL编码，再进行Base64
             } else if ((type === 'ss' || type === 'shadowsocks') && node.cipher && node.password) {
-                // 先对密码进行URL编码，处理特殊字符
                 const safePassword = encodeURIComponent(node.password);
                 const credentials = `${node.cipher}:${safePassword}`;
                 const encodedCreds = Buffer.from(credentials).toString('base64');
@@ -82,14 +83,40 @@ function generateShareLinks(nodes) {
                 }
                 link = `trojan://${encodeURIComponent(node.password)}@${server}:${port}?${params.toString()}#${remarks}`;
             
+            // 新增: 处理您提供的特定 Hysteria (v1) JSON 格式
+            } else if (type === 'hysteria' && server && port) {
+                const auth = node.auth_str || node.auth || node.password;
+                if(auth){
+                    const params = new URLSearchParams();
+                    // 从 tls 对象或顶层读取 sni 和 alpn
+                    const sni = node.tls?.server_name || node.sni || node.servername;
+                    const insecure = node.tls?.insecure || node['skip-cert-verify'];
+                    const alpn = node.tls?.alpn || node.alpn;
+                    
+                    if(sni) params.set('sni', sni);
+                    if(insecure) params.set('insecure', '1');
+                    if (alpn?.length) params.set('alpn', alpn.join(','));
+
+                    // 兼容 up_mbps 和 down_mbps
+                    const up = node.up_mbps || node.up;
+                    const down = node.down_mbps || node.down;
+                    if(up) params.set('upmbps', up.toString().replace(/\s*mbps\s*/i, ''));
+                    if(down) params.set('downmbps', down.toString().replace(/\s*mbps\s*/i, ''));
+                    
+                    // V2RayN 的 hy2 格式不支持 obfs
+                    link = `hy2://${encodeURIComponent(auth)}@${server}:${port}?${params.toString()}#${remarks}`;
+                }
+            
+            // 原有的 Hysteria2 逻辑, 用于处理 Clash YAML 格式
             } else if (type === 'hysteria2' && server && port) {
                  const auth = node.auth || node.auth_str || node.password;
                  if(auth) {
                     const params = new URLSearchParams();
                     params.set('sni', node.sni || node.servername || '');
                     if (node['skip-cert-verify']) params.set('insecure', '1');
-                    if (node.up) params.set('up', node.up.toString().replace(/\s*mbps\s*/i, ''));
-                    if (node.down) params.set('down', node.down.toString().replace(/\s*mbps\s*/i, ''));
+                    // V2RayN 通常使用 upmbps, downmbps
+                    if (node.up) params.set('upmbps', node.up.toString().replace(/\s*mbps\s*/i, ''));
+                    if (node.down) params.set('downmbps', node.down.toString().replace(/\s*mbps\s*/i, ''));
                     if (node.obfs) params.set('obfs', node.obfs);
                     if (node['obfs-password']) params.set('obfs-password', node['obfs-password']);
                     if (node.alpn?.length) params.set('alpn', node.alpn.join(','));
@@ -107,44 +134,46 @@ function generateShareLinks(nodes) {
             if (link) {
                 shareLinks.push(link);
             }
-        } catch (e) { console.error(`为节点 ${node.name} 生成链接时失败:`, e); }
+        } catch (e) { console.error(`为节点 ${node.name || node.tag} 生成链接时失败:`, e); }
     }
     return shareLinks;
 }
 
 // --- API 路由 ---
 
-app.use(express.urlencoded({ extended: true }));
-
 app.post('/api/extract', upload.single('file'), async (req, res) => {
-    const { inputType, url } = req.body;
-    let content = '';
+    const { inputType, url, json_input } = req.body;
+    let nodes = [];
 
     try {
         if (inputType === 'url') {
             if (!url) return res.status(400).send('错误：未提供URL。');
             const response = await axios.get(url, { headers: { 'User-Agent': 'Clash' } });
-            content = response.data;
+            // 尝试 base64 解码, 如果失败则使用原文
+            try {
+                nodes = extractNodesFromYamlContent(Buffer.from(response.data, 'base64').toString('utf8'));
+            } catch (e) {
+                nodes = extractNodesFromYamlContent(response.data);
+            }
         } else if (inputType === 'file') {
             if (!req.file) return res.status(400).send('错误：未提供文件。');
-            content = req.file.buffer.toString('utf8');
+            const content = req.file.buffer.toString('utf8');
+            nodes = extractNodesFromYamlContent(content);
+        } else if (inputType === 'json') {
+            if (!json_input) return res.status(400).send('错误：未提供JSON输入。');
+            try {
+                const parsedJson = JSON.parse(json_input);
+                // 确保 nodes 是一个数组
+                nodes = Array.isArray(parsedJson) ? parsedJson : [parsedJson];
+            } catch (e) {
+                return res.status(400).send(`错误：JSON格式无效。 ${e.message}`);
+            }
         } else {
             return res.status(400).send('错误：无效的输入类型。');
         }
 
-        let nodes = [];
-        try {
-            nodes = extractNodesFromYamlContent(Buffer.from(content, 'base64').toString('utf8'));
-        } catch (e) {
-            nodes = extractNodesFromYamlContent(content);
-        }
-        
         if (nodes.length === 0) {
-             nodes = extractNodesFromYamlContent(content);
-        }
-
-        if (nodes.length === 0) {
-            return res.status(400).send('错误：在提供的数据中未能找到任何代理节点。');
+            return res.status(400).send('错误：在提供的数据中未能找到任何有效节点。');
         }
 
         const shareLinks = generateShareLinks(nodes);
