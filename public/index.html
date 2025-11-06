@@ -12,9 +12,10 @@
         :root {
             --primary: #6366F1; --bg-grad: linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%);
             --glass: rgba(30, 41, 59, 0.8); --border: rgba(255,255,255,0.1);
+            --text-primary: #F8FAFC; --text-secondary: #94A3B8;
         }
         body {
-            background: var(--bg-grad); min-height: 100vh; color: #F8FAFC;
+            background: var(--bg-grad); min-height: 100vh; color: var(--text-primary);
             font-family: 'Inter', sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center;
         }
         .main-box { width: 100%; max-width: 820px; }
@@ -28,7 +29,7 @@
             background: rgba(0,0,0,0.3); padding: 6px; border-radius: 16px; border: 1px solid var(--border);
         }
         .nav-pills-custom .nav-link {
-            color: #94A3B8; font-weight: 600; padding: 10px; border-radius: 12px; transition: all 0.3s;
+            color: var(--text-secondary); font-weight: 600; padding: 10px; border-radius: 12px; transition: all 0.3s;
         }
         .nav-pills-custom .nav-link.active {
             background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
@@ -40,16 +41,17 @@
         }
         .input-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); }
         .form-control {
-            background: transparent !important; border: none !important; color: #fff !important;
+            background: transparent !important; border: none !important; color: var(--text-primary) !important;
             padding: 14px 18px; font-size: 16px;
         }
         .form-control:focus { box-shadow: none !important; }
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
         input[type="file"] { padding: 12px !important; }
         input[type="file"]::file-selector-button {
             background: var(--primary); border: none; color: #fff; border-radius: 8px;
             padding: 6px 12px; margin-right: 12px; cursor: pointer;
         }
-        /* 按钮 (提高 z-index 防止被遮挡) */
+        /* 按钮 */
         .btn-main {
             background: linear-gradient(135deg, #6366F1, #4F46E5); border: none; padding: 16px;
             border-radius: 16px; color: #fff; font-weight: 700; font-size: 18px; width: 100%;
@@ -59,15 +61,40 @@
         .btn-main:active { transform: scale(0.98); }
         .btn-main:disabled { opacity: 0.7; cursor: not-allowed; }
         
-        /* 结果表格 */
+        /* === 结果表格优化 === */
         .table-wrap {
             background: rgba(15, 23, 42, 0.5); border-radius: 18px; border: 1px solid var(--border); overflow: hidden;
         }
-        .table { --bs-table-bg: transparent; margin: 0; color: #e2e8f0; }
-        .table th { background: rgba(0,0,0,0.2); text-transform: uppercase; font-size: 0.85rem; padding: 16px; border-bottom: 1px solid var(--border); }
-        .table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+        .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text-primary); /* 修复文字颜色 */
+            --bs-table-hover-color: var(--text-primary);
+            --bs-table-hover-bg: rgba(99, 102, 241, 0.1);
+            margin: 0;
+        }
+        .table th {
+            background: rgba(0,0,0,0.25); color: var(--text-secondary) !important;
+            text-transform: uppercase; font-size: 0.85rem; padding: 16px; border-bottom: 1px solid var(--border);
+        }
+        .table td {
+            padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle;
+            color: var(--text-primary); /* 确保内容文字也是亮色 */
+        }
         .badge-custom { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; background: rgba(255,255,255,0.1); }
-        
+
+        /* === 新的视图切换按钮 === */
+        .view-toggle {
+            background: rgba(0,0,0,0.3); border-radius: 50rem; padding: 4px; border: 1px solid var(--border); display: inline-flex;
+        }
+        .view-toggle .btn-toggle {
+            border: none; background: transparent; color: var(--text-secondary); padding: 6px 16px;
+            border-radius: 50rem; font-size: 14px; font-weight: 600; transition: all 0.2s;
+        }
+        .view-toggle .btn-toggle.active {
+            background: var(--primary); color: #fff; box-shadow: 0 2px 10px -3px rgba(99, 102, 241, 0.5);
+        }
+        .view-toggle .btn-toggle:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.1); }
+
         @media (max-width: 768px) { .glass-card { padding: 24px 20px; } }
         .d-none { display: none !important; }
     </style>
@@ -128,26 +155,39 @@
             </div>
 
             <div id="res-box" class="d-none mt-5">
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-4">
                     <h5 class="mb-0 fw-bold">🎉 提取成功</h5>
-                    <div class="btn-group btn-group-sm">
-                        <button class="btn btn-primary" onclick="showTab('table')">列表</button>
-                        <button class="btn btn-outline-light" onclick="showTab('text')">文本</button>
+                    <div class="view-toggle">
+                        <button class="btn-toggle active" id="btn-view-table">
+                            <i class="fa-solid fa-list-ul me-2"></i>列表
+                        </button>
+                        <button class="btn-toggle" id="btn-view-text">
+                            <i class="fa-regular fa-file-lines me-2"></i>文本
+                        </button>
                     </div>
                 </div>
+
                 <div id="tab-table" class="table-wrap">
                     <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                        <table class="table align-middle">
-                            <thead class="sticky-top"><tr><th class="ps-4">名称</th><th>类型</th><th class="text-end pe-4">操作</th></tr></thead>
+                        <table class="table table-hover align-middle">
+                            <thead class="sticky-top">
+                                <tr>
+                                    <th class="ps-4">名称</th>
+                                    <th class="text-center">类型</th>
+                                    <th class="text-end pe-4">操作</th>
+                                </tr>
+                            </thead>
                             <tbody id="res-tbody"></tbody>
                         </table>
                     </div>
                 </div>
+
                 <div id="tab-text" class="d-none">
                     <div class="input-box">
                         <textarea id="res-text" class="form-control font-monospace small" rows="12" readonly onclick="this.select()"></textarea>
                     </div>
                 </div>
+
                 <button id="btn-copy" class="btn-main mt-4" style="background: linear-gradient(135deg, #10b981, #059669);">
                     <i class="fa-solid fa-copy me-2"></i>一键复制全部
                 </button>
@@ -157,22 +197,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 极简且稳健的 JS
         const get = (id) => document.getElementById(id);
-        let currentView = 'table';
 
-        // 1. 提交事件 (直接绑定，防止 DOMContentLoaded 延迟)
+        // 提交逻辑
         get('btn-go').onclick = async () => {
             resetUI();
             const formData = new FormData();
             let type = 'url';
-
-            // 判断当前激活的 Tab
             if (get('file-tab').classList.contains('active')) type = 'file';
             if (get('json-tab').classList.contains('active')) type = 'json';
             formData.append('inputType', type);
 
-            // 验证输入
             if (type === 'url') {
                 const val = get('inp-url').value.trim();
                 if (!val) return showError('请输入订阅链接');
@@ -191,7 +226,6 @@
                 const res = await fetch('/api/extract', { method: 'POST', body: formData });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.error || `服务器错误 (${res.status})`);
-                
                 showResult(data);
             } catch (e) {
                 showError(e.message || '未知错误，请检查网络');
@@ -200,14 +234,20 @@
             }
         };
 
-        // 2. 辅助功能
+        // 视图切换逻辑
+        get('btn-view-table').onclick = () => switchView(true);
+        get('btn-view-text').onclick = () => switchView(false);
+
+        function switchView(isTable) {
+            get('tab-table').classList.toggle('d-none', !isTable);
+            get('tab-text').classList.toggle('d-none', isTable);
+            get('btn-view-table').classList.toggle('active', isTable);
+            get('btn-view-text').classList.toggle('active', !isTable);
+        }
+
+        // 辅助功能
         get('btn-copy').onclick = () => doCopy(get('res-text').value, get('btn-copy'));
-        
         window.copyOne = (btn, text) => doCopy(decodeURIComponent(text), btn, true);
-        window.showTab = (view) => {
-            get('tab-table').classList.toggle('d-none', view !== 'table');
-            get('tab-text').classList.toggle('d-none', view !== 'text');
-        };
 
         function doCopy(text, btn, isSmall=false) {
             navigator.clipboard.writeText(text).then(() => {
@@ -222,8 +262,8 @@
             get('res-text').value = data.all_links;
             get('res-tbody').innerHTML = (data.nodes||[]).map(n => `
                 <tr>
-                    <td class="ps-4 fw-bold text-truncate" style="max-width: 150px;" title="${n.info.name}">${n.info.name}</td>
-                    <td><span class="badge-custom">${n.info.type}</span></td>
+                    <td class="ps-4 fw-bold text-truncate" style="max-width: 180px;" title="${n.info.name}">${n.info.name}</td>
+                    <td class="text-center"><span class="badge-custom">${n.info.type}</span></td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-outline-light" onclick="copyOne(this, '${encodeURIComponent(n.link)}')">
                             <i class="fa-regular fa-copy"></i>
