@@ -2,161 +2,285 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>V2RayN 节点提取器</title>
     <link rel="icon" href="https://www.svgrepo.com/show/513474/rocket.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --primary-color: #6366F1; --primary-color-hover: #4F46E5; --glass-bg: rgba(30, 30, 45, 0.85); }
+        :root {
+            --primary-color: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --bg-gradient: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%);
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+        }
+
         body {
-            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-            min-height: 100vh; color: #e0e0e0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            padding: 15px; /* 移动端默认较小的 padding */
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        /* === 核心卡片样式 === */
-        .main-container { max-width: 800px; margin: 20px auto; transition: all 0.3s ease; }
+        .main-container { width: 100%; max-width: 850px; margin: auto; }
+
+        /* === 高级毛玻璃卡片 === */
         .glass-card {
-            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.08); 
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-            padding: 25px; border-radius: 20px; /* 移动端默认 */
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 35px 60px -15px rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        /* 顶部微光效果 */
+        .glass-card::before {
+            content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%;
+            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 50%);
+            pointer-events: none;
         }
 
-        /* === 响应式适配 (PC & 平板) === */
-        @media (min-width: 768px) {
-            body { padding: 30px; }
-            .main-container { margin: 40px auto; }
-            .glass-card { padding: 40px; border-radius: 24px; }
+        /* === 分段控制器 (Segmented Control) === */
+        .segmented-control {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px;
+            border-radius: 16px;
+            display: flex;
+            position: relative;
+            border: 1px solid var(--glass-border);
         }
+        .segmented-control input { display: none; }
+        .segmented-control label {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            z-index: 2;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        /* 滑块 */
+        .segment-glider {
+            position: absolute;
+            top: 6px; left: 6px;
+            height: calc(100% - 12px);
+            width: calc((100% - 12px) / 3);
+            background: var(--primary-color);
+            border-radius: 12px;
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        /* 控制滑块位置和文字颜色 */
+        #type-url:checked ~ .segment-glider { transform: translateX(0%); }
+        #type-file:checked ~ .segment-glider { transform: translateX(100%); }
+        #type-json:checked ~ .segment-glider { transform: translateX(200%); }
+        #type-url:checked ~ label[for="type-url"],
+        #type-file:checked ~ label[for="type-file"],
+        #type-json:checked ~ label[for="type-json"] { color: #fff; }
 
-        /* === 组件样式优化 === */
+        /* === 输入框美化 === */
         .form-control, .form-select {
-            background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #fff !important;
+            background: rgba(15, 23, 42, 0.3) !important;
+            border: 2px solid transparent !important;
+            color: var(--text-primary) !important;
+            border-radius: 16px !important;
+            padding: 16px 20px !important;
+            font-size: 1rem;
+            transition: all 0.3s ease;
         }
         .form-control:focus {
-            background: rgba(255,255,255,0.08) !important; border-color: var(--primary-color) !important;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
+            background: rgba(15, 23, 42, 0.5) !important;
+            border-color: var(--primary-light) !important;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
         }
-        .btn-primary {
-            background: var(--primary-color); border: none; font-weight: 600; transition: all 0.2s ease;
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
+
+        /* === 主按钮 === */
+        .btn-hero {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border: none; padding: 16px; border-radius: 16px;
+            font-weight: 700; letter-spacing: 0.5px;
+            color: white; position: relative; overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.5);
         }
-        .btn-primary:hover, .btn-primary:active { background: var(--primary-color-hover) !important; transform: translateY(-1px); }
-        .btn-check:checked + .btn-outline-primary { background-color: var(--primary-color); border-color: var(--primary-color); color: #fff; }
-        
-        /* 移动端输入类型切换按钮优化 */
-        .type-toggle-group .btn { padding: 8px 16px; font-size: 0.95rem; }
-        @media (max-width: 576px) {
-            .type-toggle-group { width: 100%; }
-            .type-toggle-group .btn { flex: 1; padding: 8px 5px; font-size: 0.85rem; white-space: nowrap; }
-            .type-toggle-group i { margin-right: 4px !important; }
+        .btn-hero:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 30px -10px rgba(99, 102, 241, 0.6);
+            filter: brightness(1.1);
+        }
+        .btn-hero:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
+        .btn-hero:disabled { opacity: 0.7; cursor: not-allowed; filter: grayscale(0.5); }
+
+        /* === 进度条 === */
+        .progress-container { background: rgba(0,0,0,0.2); border-radius: 20px; padding: 4px; height: 14px; overflow: hidden; }
+        .progress-bar-custom {
+            height: 100%; border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
         }
 
-        /* 表格视图优化 */
-        .table-responsive {
-             border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-             background: rgba(0,0,0,0.2);
+        /* === 表格视图 === */
+        .table-container {
+            background: rgba(15, 23, 42, 0.3); border-radius: 20px; overflow: hidden;
+            border: 1px solid var(--glass-border);
         }
-        .table-dark { --bs-table-bg: transparent; }
-        .table td, .table th { vertical-align: middle; border-color: rgba(255,255,255,0.08); white-space: nowrap; }
-        
-        /* 节点标签样式 */
-        .node-tag { padding: 3px 6px; border-radius: 4px; font-size: 0.7em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tag-vmess { background: rgba(156, 39, 176, 0.2); color: #e1bee7; border: 1px solid rgba(156, 39, 176, 0.5); }
-        .tag-vless { background: rgba(0, 188, 212, 0.2); color: #b2ebf2; border: 1px solid rgba(0, 188, 212, 0.5); }
-        .tag-ss { background: rgba(76, 175, 80, 0.2); color: #c8e6c9; border: 1px solid rgba(76, 175, 80, 0.5); }
-        .tag-trojan { background: rgba(255, 152, 0, 0.2); color: #ffe0b2; border: 1px solid rgba(255, 152, 0, 0.5); }
-        .tag-hysteria2 { background: rgba(233, 30, 99, 0.2); color: #f8bbd0; border: 1px solid rgba(233, 30, 99, 0.5); }
+        .table { --bs-table-bg: transparent; margin-bottom: 0; }
+        .table thead th {
+            background: rgba(10, 15, 30, 0.5); color: var(--text-secondary);
+            font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+            padding: 15px 20px; border-bottom: 1px solid var(--glass-border);
+        }
+        .table tbody td {
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03);
+            vertical-align: middle; color: var(--text-primary); transition: all 0.2s;
+        }
+        .table tbody tr:hover td { background: rgba(99, 102, 241, 0.1); }
 
-        /* 进度条 */
-        .progress { background-color: rgba(255,255,255,0.08); height: 6px; border-radius: 10px; overflow: hidden; }
-        .progress-bar { background-color: var(--primary-color); transition: width 0.4s ease; }
+        /* === 节点标签 === */
+        .node-tag {
+            padding: 4px 10px; border-radius: 8px; font-size: 0.75em; font-weight: 800; letter-spacing: 0.5px;
+            display: inline-block; text-align: center; min-width: 65px;
+        }
+        .tag-vmess { background: rgba(216, 180, 254, 0.15); color: #e9d5ff; border: 1px solid rgba(216, 180, 254, 0.3); }
+        .tag-vless { background: rgba(165, 243, 252, 0.15); color: #cffafe; border: 1px solid rgba(165, 243, 252, 0.3); }
+        .tag-ss { background: rgba(167, 243, 208, 0.15); color: #bbf7d0; border: 1px solid rgba(167, 243, 208, 0.3); }
+        .tag-trojan { background: rgba(253, 218, 164, 0.15); color: #fef3c7; border: 1px solid rgba(253, 218, 164, 0.3); }
+        .tag-hysteria2 { background: rgba(253, 164, 175, 0.15); color: #fecdd3; border: 1px solid rgba(253, 164, 175, 0.3); }
 
-        /* 动画 */
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        /* === 复制按钮 === */
+        .btn-icon {
+            width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05);
+            color: var(--text-secondary); transition: all 0.2s;
+        }
+        .btn-icon:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); transform: scale(1.1); }
+
+        /* === 响应式调整 === */
+        @media (max-width: 768px) {
+            body { padding: 15px; align-items: flex-start; }
+            .glass-card { padding: 20px; border-radius: 24px; }
+            .segmented-control label { font-size: 0.9rem; padding: 8px; }
+            .segmented-control label i { display: none; } /* 手机上隐藏图标，只显示文字 */
+            .form-control { padding: 14px; font-size: 0.95rem; }
+            .table thead th, .table tbody td { padding: 12px 15px; }
+        }
+
+        /* 动画类 */
+        .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
-    <div class="container main-container">
-        <div class="glass-card animate-slide-up">
-            <h3 class="text-center fw-bold mb-4 d-md-none"> <i class="fa-solid fa-rocket text-primary me-2"></i>V2RayN 节点提取器
-            </h3>
-            <h2 class="text-center fw-bold mb-4 d-none d-md-block"> <i class="fa-solid fa-rocket text-primary me-2"></i>V2RayN 节点提取器
-            </h2>
+    <div class="main-container">
+        <div class="glass-card fade-in-up">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold display-6">
+                    <span style="background: linear-gradient(to right, #818cf8, #c7d2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        V2RayN 节点提取器
+                    </span>
+                </h2>
+                <p class="text-secondary mb-0">Pro Version</p>
+            </div>
 
             <form id="extract-form">
-                <div class="d-flex justify-content-center mb-4">
-                    <div class="btn-group type-toggle-group" role="group">
-                        <input type="radio" class="btn-check" name="inputType" id="type-url" value="url" checked>
-                        <label class="btn btn-outline-primary" for="type-url"><i class="fa-solid fa-link me-2"></i>订阅链接</label>
-                        <input type="radio" class="btn-check" name="inputType" id="type-file" value="file">
-                        <label class="btn btn-outline-primary" for="type-file"><i class="fa-solid fa-file-arrow-up me-2"></i>文件</label>
-                        <input type="radio" class="btn-check" name="inputType" id="type-json" value="json">
-                        <label class="btn btn-outline-primary" for="type-json"><i class="fa-solid fa-code me-2"></i>文本</label>
-                    </div>
+                <div class="segmented-control mb-4">
+                    <input type="radio" name="inputType" id="type-url" value="url" checked>
+                    <label for="type-url"><i class="fa-solid fa-link"></i>订阅链接</label>
+                    
+                    <input type="radio" name="inputType" id="type-file" value="file">
+                    <label for="type-file"><i class="fa-solid fa-file-arrow-up"></i>文件上传</label>
+                    
+                    <input type="radio" name="inputType" id="type-json" value="json">
+                    <label for="type-json"><i class="fa-solid fa-code"></i>文本内容</label>
+                    
+                    <div class="segment-glider"></div>
                 </div>
 
                 <div class="input-area mb-4">
-                    <div id="group-url">
-                        <input type="url" class="form-control form-control-lg fs-6 fs-md-5" id="input-url" placeholder="在此粘贴订阅链接 (http://...)">
+                    <div id="group-url" class="fade-in-up" style="animation-delay: 0.1s">
+                        <input type="url" class="form-control" id="input-url" placeholder="请粘贴 http:// 或 https:// 开头的订阅链接">
                     </div>
-                    <div id="group-file" class="d-none">
-                        <input type="file" class="form-control form-control-lg fs-6 fs-md-5" id="input-file" accept=".yaml,.yml,.json,.txt">
+                    <div id="group-file" class="d-none fade-in-up">
+                        <input type="file" class="form-control" id="input-file" accept=".yaml,.yml,.json,.txt">
                     </div>
-                    <div id="group-json" class="d-none">
-                        <textarea class="form-control" id="input-json" rows="5" placeholder="在此粘贴配置文本..."></textarea>
+                    <div id="group-json" class="d-none fade-in-up">
+                        <textarea class="form-control font-monospace" id="input-json" rows="5" placeholder="在此粘贴 Base64、YAML 或 JSON 内容..." style="min-height: 120px;"></textarea>
                     </div>
                 </div>
 
-                <button type="button" id="btn-submit" class="btn btn-primary w-100 py-2 py-md-3 rounded-3 fs-6 fs-md-5">
-                    <span id="btn-text"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>开始提取</span>
+                <button type="button" id="btn-submit" class="btn-hero w-100">
+                    <span id="btn-text"><i class="fa-solid fa-bolt me-2"></i>立即提取</span>
                     <span id="btn-loading" class="d-none">
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>处理中...
+                        <span class="spinner-border spinner-border-sm me-2"></span>正在解析...
                     </span>
                 </button>
                 
                 <div id="progress-section" class="d-none mt-4">
-                    <div class="progress mb-2">
-                        <div id="progress-bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                    <div class="d-flex justify-content-between small text-secondary mb-2 px-1">
+                        <span id="progress-status">准备就绪...</span>
+                        <span id="progress-percent">0%</span>
                     </div>
-                    <p id="progress-status" class="text-center text-white-50 small mb-0" style="font-size: 0.85em;">准备就绪...</p>
+                    <div class="progress-container">
+                        <div id="progress-bar" class="progress-bar-custom" style="width: 0%"></div>
+                    </div>
                 </div>
             </form>
 
-            <div id="error-alert" class="alert alert-danger alert-dismissible fade show mt-4 d-none border-0 p-3" style="background: rgba(220, 53, 69, 0.15); color: #ff868e; font-size: 0.9rem;" role="alert">
-                <i class="fa-solid fa-circle-exclamation me-2"></i><strong id="error-title">出错啦：</strong> <span id="error-msg"></span>
-                <button type="button" class="btn-close btn-close-white" aria-label="Close" onclick="this.parentElement.classList.add('d-none')"></button>
+            <div id="error-alert" class="alert alert-danger d-none mt-4 border-0" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-radius: 16px; padding: 16px 20px;">
+                <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-circle-xmark fs-4 me-3"></i>
+                    <div>
+                        <strong class="d-block">提取失败</strong>
+                        <span id="error-msg" class="small opacity-75"></span>
+                    </div>
+                </div>
             </div>
 
-            <div id="result-section" class="d-none mt-5 animate-slide-up">
-                <hr class="border-secondary opacity-25 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-circle-check text-success me-2"></i>提取结果</h5>
-                    <ul class="nav nav-pills custom-pills ms-auto" style="font-size: 0.9rem;">
-                        <li class="nav-item"><a class="nav-link active py-1 px-3" data-view="table"><i class="fa-solid fa-list me-1"></i>列表</a></li>
-                        <li class="nav-item"><a class="nav-link py-1 px-3" data-view="text"><i class="fa-solid fa-align-left me-1"></i>文本</a></li>
-                    </ul>
+            <div id="result-section" class="d-none mt-5 fade-in-up">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="fw-bold mb-1">提取成功 <i class="fa-solid fa-circle-check text-success ms-2"></i></h5>
+                        <p id="result-summary" class="small text-secondary mb-0"></p>
+                    </div>
+                    <div class="bg-dark bg-opacity-25 p-1 rounded-pill d-flex" style="border: 1px solid var(--glass-border);">
+                        <button class="btn btn-sm btn-primary rounded-pill px-3" id="tab-table">列表</button>
+                        <button class="btn btn-sm text-secondary rounded-pill px-3" id="tab-text">文本</button>
+                    </div>
                 </div>
-                <p id="result-summary" class="text-white-50 small mb-3" style="font-size: 0.85em;"></p>
 
                 <div id="view-table">
-                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                        <table class="table table-dark table-hover mb-0 align-middle" style="font-size: 0.9rem;">
-                            <thead class="sticky-top" style="background: #1e1e2d; z-index: 1;">
-                                <tr>
-                                    <th class="ps-3">名称</th>
-                                    <th>类型</th>
-                                    <th class="d-none d-sm-table-cell">地址</th> <th class="text-end pe-3">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="result-tbody"></tbody>
-                        </table>
-                    </div>
-                    <div class="d-block d-sm-none text-white-50 small mt-2 text-center">
-                        <i class="fa-solid fa-circle-info me-1"></i>手机端已隐藏地址列，请点击复制查看
+                    <div class="table-container">
+                        <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                            <table class="table align-middle">
+                                <thead class="sticky-top">
+                                    <tr>
+                                        <th class="ps-4">节点名称</th>
+                                        <th class="text-center">类型</th>
+                                        <th class="d-none d-md-table-cell opacity-75">服务器地址</th>
+                                        <th class="text-end pe-4">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="result-tbody"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -164,8 +288,8 @@
                     <textarea id="result-textarea" class="form-control font-monospace small" rows="12" readonly onclick="this.select()"></textarea>
                 </div>
 
-                <button id="btn-copy-all" class="btn btn-success w-100 mt-4 py-2 py-md-3 fw-bold">
-                    <i class="fa-solid fa-clipboard-list me-2"></i>一键复制所有节点
+                <button id="btn-copy-all" class="btn-hero w-100 mt-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);">
+                    <i class="fa-solid fa-copy me-2"></i>一键复制全部链接
                 </button>
             </div>
         </div>
@@ -173,29 +297,35 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // UI 引用
         const ui = {
             inputs: { url: document.getElementById('group-url'), file: document.getElementById('group-file'), json: document.getElementById('group-json') },
-            views: { text: document.getElementById('view-text'), table: document.getElementById('view-table') },
+            views: { table: document.getElementById('view-table'), text: document.getElementById('view-text') },
+            tabs: { table: document.getElementById('tab-table'), text: document.getElementById('tab-text') },
             btn: { submit: document.getElementById('btn-submit'), text: document.getElementById('btn-text'), loading: document.getElementById('btn-loading') },
-            progress: { section: document.getElementById('progress-section'), bar: document.getElementById('progress-bar'), status: document.getElementById('progress-status') },
+            progress: { section: document.getElementById('progress-section'), bar: document.getElementById('progress-bar'), status: document.getElementById('progress-status'), percent: document.getElementById('progress-percent') },
             result: { section: document.getElementById('result-section'), summary: document.getElementById('result-summary'), tbody: document.getElementById('result-tbody'), textarea: document.getElementById('result-textarea') },
-            error: { alert: document.getElementById('error-alert'), title: document.getElementById('error-title'), msg: document.getElementById('error-msg') }
+            error: { alert: document.getElementById('error-alert'), msg: document.getElementById('error-msg') }
         };
 
+        // 输入切换
         document.querySelectorAll('input[name="inputType"]').forEach(r => r.addEventListener('change', (e) => {
             Object.values(ui.inputs).forEach(el => el.classList.add('d-none'));
             ui.inputs[e.target.value].classList.remove('d-none');
             hideError();
         }));
 
-        document.querySelectorAll('[data-view]').forEach(l => l.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.querySelectorAll('[data-view]').forEach(i => i.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-            Object.values(ui.views).forEach(v => v.classList.add('d-none'));
-            ui.views[e.currentTarget.dataset.view].classList.remove('d-none');
-        }));
+        // 视图切换 (简化版)
+        ui.tabs.table.addEventListener('click', () => switchView('table'));
+        ui.tabs.text.addEventListener('click', () => switchView('text'));
+        function switchView(viewName) {
+            ui.views.table.classList.toggle('d-none', viewName !== 'table');
+            ui.views.text.classList.toggle('d-none', viewName !== 'text');
+            ui.tabs.table.className = viewName === 'table' ? 'btn btn-sm btn-primary rounded-pill px-3' : 'btn btn-sm text-secondary rounded-pill px-3';
+            ui.tabs.text.className = viewName === 'text' ? 'btn btn-sm btn-primary rounded-pill px-3' : 'btn btn-sm text-secondary rounded-pill px-3';
+        }
 
+        // 提交逻辑
         ui.btn.submit.addEventListener('click', async () => {
             resetUI();
             const type = document.querySelector('input[name="inputType"]:checked').value;
@@ -203,104 +333,97 @@
             formData.append('inputType', type);
 
             if (type === 'url') {
-                const url = document.getElementById('input-url').value.trim();
-                if (!url) return showError('请输入有效的订阅链接');
-                formData.append('url', url);
+                const val = document.getElementById('input-url').value.trim();
+                if (!val) return showError('请输入订阅链接');
+                formData.append('url', val);
             } else if (type === 'file') {
                 const file = document.getElementById('input-file').files[0];
-                if (!file) return showError('请选择一个文件');
+                if (!file) return showError('请选择文件');
                 formData.append('file', file);
             } else {
-                const json = document.getElementById('input-json').value.trim();
-                if (!json) return showError('请输入需要解析的文本内容');
-                formData.append('json_input', json);
+                const val = document.getElementById('input-json').value.trim();
+                if (!val) return showError('请输入文本内容');
+                formData.append('json_input', val);
             }
 
             try {
                 setLoading(true);
-                updateProgress(15, '正在建立连接...');
-                const progressTimer = simulateProgress();
+                let p = 5;
+                updateProgress(p, '正在发起请求...');
+                const timer = setInterval(() => { if(p < 90) updateProgress(p += Math.random()*5, '正在从服务器获取数据...') }, 300);
+                
                 const res = await fetch('/api/extract', { method: 'POST', body: formData });
-                clearInterval(progressTimer);
-                updateProgress(95, '正在解析数据...');
+                clearInterval(timer);
 
+                if (!res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    throw new Error(data.error || `请求失败 (${res.status})`);
+                }
+                updateProgress(100, '解析完成！');
                 const data = await res.json();
-                if (!res.ok || data.error) throw new Error(data.error || `请求失败 (${res.status})`);
+                setTimeout(() => showResults(data), 500);
 
-                updateProgress(100, '处理完成！');
-                setTimeout(() => showResults(data), 400);
             } catch (err) {
-                clearInterval(window.currentProgressTimer);
-                updateProgress(0, '操作中断', true);
-                let msg = err.message;
-                if (msg.includes('Failed to fetch')) msg = '网络请求失败，请检查网络。';
-                if (msg.includes('timeout')) msg = '请求目标服务器超时。';
-                showError(msg);
-            } finally {
+                updateProgress(0, '失败');
+                ui.progress.section.classList.add('d-none');
+                showError(err.message);
+            } else {
                 setLoading(false);
             }
         });
 
-        function updateProgress(percent, text, isError = false) {
+        // 工具函数
+        function updateProgress(percent, status) {
             ui.progress.section.classList.remove('d-none');
-            ui.progress.bar.style.width = `${percent}%`;
-            ui.progress.status.textContent = text;
-            ui.progress.bar.classList.toggle('bg-danger', isError);
-            ui.progress.bar.classList.toggle('progress-bar-animated', !isError);
-        }
-
-        function simulateProgress() {
-            let percent = 15;
-            window.currentProgressTimer = setInterval(() => {
-                percent += Math.random() * 8;
-                if (percent > 90) percent = 90;
-                updateProgress(percent, '正在请求订阅源...');
-            }, 600);
-            return window.currentProgressTimer;
+            const p = Math.min(100, Math.floor(percent));
+            ui.progress.bar.style.width = `${p}%`;
+            ui.progress.percent.textContent = `${p}%`;
+            ui.progress.status.textContent = status;
         }
 
         function showResults(data) {
             ui.progress.section.classList.add('d-none');
             ui.result.section.classList.remove('d-none');
-            ui.result.summary.textContent = `${data.message} | ${data.summary}`;
+            ui.result.summary.textContent = data.summary;
             ui.result.textarea.value = data.all_links;
-            ui.result.tbody.innerHTML = '';
-            data.nodes.forEach(item => {
-                const tr = document.createElement('tr');
-                // 手机端优化：名称列最大宽度减小，地址列在小屏幕隐藏 (通过 d-none d-sm-table-cell 控制)
-                tr.innerHTML = `
-                    <td class="ps-3"><div class="text-truncate fw-bold" style="max-width: 140px;" title="${item.info.name}">${item.info.name}</div></td>
-                    <td><span class="node-tag tag-${item.info.type}">${item.info.type}</span></td>
-                    <td class="d-none d-sm-table-cell font-monospace small opacity-75">
-                        <div class="text-truncate" style="max-width: 180px;" title="${item.info.server}:${item.info.port}">${item.info.server}:${item.info.port}</div>
+            ui.result.tbody.innerHTML = data.nodes.map(n => `
+                <tr>
+                    <td class="ps-4">
+                        <div class="fw-bold text-truncate" style="max-width: 160px;" title="${n.info.name}">${n.info.name}</div>
                     </td>
-                    <td class="text-end pe-3">
-                        <button class="btn btn-sm btn-outline-light copy-btn py-1 px-2" data-link="${item.link}">
-                            <i class="fa-regular fa-copy"></i><span class="d-none d-sm-inline ms-1">复制</span>
+                    <td class="text-center"><span class="node-tag tag-${n.info.type}">${n.info.type}</span></td>
+                    <td class="d-none d-md-table-cell font-monospace small opacity-50">${n.info.server}:${n.info.port}</td>
+                    <td class="text-end pe-4">
+                        <button class="btn-icon ms-auto" onclick="copyText('${n.link}', this)">
+                            <i class="fa-regular fa-copy"></i>
                         </button>
                     </td>
-                `;
-                ui.result.tbody.appendChild(tr);
-            });
-            document.querySelectorAll('.copy-btn').forEach(btn => btn.addEventListener('click', () => copyToClip(btn.dataset.link, btn)));
+                </tr>
+            `).join('');
             ui.result.section.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
-        function copyToClip(text, btn) {
+        function copyText(text, btn) {
             navigator.clipboard.writeText(text).then(() => {
-                if (btn) {
-                    const oriHtml = btn.innerHTML;
-                    btn.innerHTML = '<i class="fa-solid fa-check text-success"></i>';
-                    setTimeout(() => btn.innerHTML = oriHtml, 1500);
+                if(btn) {
+                    const old = btn.innerHTML;
+                    btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i>';
+                    btn.style.borderColor = '#10b981';
+                    btn.style.color = '#10b981';
+                    setTimeout(() => {
+                        btn.innerHTML = old;
+                        btn.removeAttribute('style');
+                    }, 1500);
                 }
-            }).catch(() => showError('复制失败，请手动复制'));
+            }).catch(() => alert('复制失败，请手动复制'));
         }
 
-        document.getElementById('btn-copy-all').addEventListener('click', function() {
-            copyToClip(ui.result.textarea.value);
-            const oriHtml = this.innerHTML;
-            this.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>已复制全部!';
-            setTimeout(() => this.innerHTML = oriHtml, 2000);
+        document.getElementById('btn-copy-all').addEventListener('click', (e) => {
+             copyText(ui.result.textarea.value);
+             const btn = e.currentTarget;
+             const oldHtml = btn.innerHTML;
+             btn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>已复制全部!';
+             setTimeout(() => btn.innerHTML = oldHtml, 2000);
         });
 
         function setLoading(isLoading) {
@@ -308,8 +431,8 @@
             ui.btn.text.classList.toggle('d-none', isLoading);
             ui.btn.loading.classList.toggle('d-none', !isLoading);
         }
-        function resetUI() { ui.result.section.classList.add('d-none'); hideError(); ui.progress.bar.style.width = '0%'; ui.progress.section.classList.add('d-none'); }
-        function showError(msg, title = '提取失败：') { ui.error.title.textContent = title; ui.error.msg.textContent = msg; ui.error.alert.classList.remove('d-none'); }
+        function resetUI() { ui.result.section.classList.add('d-none'); hideError(); ui.progress.section.classList.add('d-none'); }
+        function showError(msg) { ui.error.msg.textContent = msg; ui.error.alert.classList.remove('d-none'); }
         function hideError() { ui.error.alert.classList.add('d-none'); }
     </script>
 </body>
