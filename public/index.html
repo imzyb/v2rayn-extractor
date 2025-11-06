@@ -45,7 +45,6 @@
             position: relative;
             overflow: hidden;
         }
-        /* 顶部微光效果 */
         .glass-card::before {
             content: ''; position: absolute; top: 0; left: -50%; width: 200%; height: 100%;
             background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.05) 0%, transparent 50%);
@@ -74,7 +73,6 @@
             border-radius: 12px;
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
-        /* 滑块 */
         .segment-glider {
             position: absolute;
             top: 6px; left: 6px;
@@ -86,7 +84,6 @@
             transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
         }
-        /* 控制滑块位置和文字颜色 */
         #type-url:checked ~ .segment-glider { transform: translateX(0%); }
         #type-file:checked ~ .segment-glider { transform: translateX(100%); }
         #type-json:checked ~ .segment-glider { transform: translateX(200%); }
@@ -94,15 +91,16 @@
         #type-file:checked ~ label[for="type-file"],
         #type-json:checked ~ label[for="type-json"] { color: #fff; }
 
-        /* === 输入框美化 === */
+        /* === 输入框美化 (修复可见性) === */
         .form-control, .form-select {
             background: rgba(15, 23, 42, 0.3) !important;
-            border: 2px solid transparent !important;
+            border: 2px solid rgba(255,255,255,0.05) !important;
             color: var(--text-primary) !important;
             border-radius: 16px !important;
             padding: 16px 20px !important;
             font-size: 1rem;
             transition: all 0.3s ease;
+            width: 100%; /* 确保占满容器 */
         }
         .form-control:focus {
             background: rgba(15, 23, 42, 0.5) !important;
@@ -110,6 +108,17 @@
             box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
         }
         .form-control::placeholder { color: rgba(255,255,255,0.3); }
+        /* 特别修复文件输入框 */
+        input[type="file"].form-control {
+            padding: 12px 20px !important;
+            height: auto !important;
+        }
+        input[type="file"]::file-selector-button {
+            background: var(--primary-color); border: none; color: white;
+            padding: 8px 16px; border-radius: 8px; margin-right: 16px;
+            transition: all 0.2s; cursor: pointer;
+        }
+        input[type="file"]::file-selector-button:hover { background: var(--primary-dark); }
 
         /* === 主按钮 === */
         .btn-hero {
@@ -119,6 +128,7 @@
             color: white; position: relative; overflow: hidden;
             transition: all 0.3s ease;
             box-shadow: 0 8px 20px -6px rgba(99, 102, 241, 0.5);
+            width: 100%; cursor: pointer;
         }
         .btn-hero:hover:not(:disabled) {
             transform: translateY(-3px) scale(1.02);
@@ -133,7 +143,7 @@
         .progress-bar-custom {
             height: 100%; border-radius: 10px;
             background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
-            transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: width 0.3s ease-out;
             box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
         }
 
@@ -169,7 +179,7 @@
         .btn-icon {
             width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
             border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05);
-            color: var(--text-secondary); transition: all 0.2s;
+            color: var(--text-secondary); transition: all 0.2s; cursor: pointer;
         }
         .btn-icon:hover { background: var(--primary-color); color: white; border-color: var(--primary-color); transform: scale(1.1); }
 
@@ -178,29 +188,28 @@
             body { padding: 15px; align-items: flex-start; }
             .glass-card { padding: 20px; border-radius: 24px; }
             .segmented-control label { font-size: 0.9rem; padding: 8px; }
-            .segmented-control label i { display: none; } /* 手机上隐藏图标，只显示文字 */
+            .segmented-control label i { display: none; }
             .form-control { padding: 14px; font-size: 0.95rem; }
             .table thead th, .table tbody td { padding: 12px 15px; }
         }
-
-        /* 动画类 */
         .fade-in-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
         @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .d-none { display: none !important; } /* 强制隐藏 */
     </style>
 </head>
 <body>
     <div class="main-container">
         <div class="glass-card fade-in-up">
             <div class="text-center mb-5">
-                <h2 class="fw-bold display-6">
+                <h2 class="fw-bold display-6 mb-0">
                     <span style="background: linear-gradient(to right, #818cf8, #c7d2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                         V2RayN 节点提取器
                     </span>
                 </h2>
-                <p class="text-secondary mb-0">Pro Version</p>
+                <p class="text-secondary mt-2">Pro Version</p>
             </div>
 
-            <form id="extract-form">
+            <form id="extract-form" onsubmit="return false;">
                 <div class="segmented-control mb-4">
                     <input type="radio" name="inputType" id="type-url" value="url" checked>
                     <label for="type-url"><i class="fa-solid fa-link"></i>订阅链接</label>
@@ -214,19 +223,18 @@
                     <div class="segment-glider"></div>
                 </div>
 
-                <div class="input-area mb-4">
-                    <div id="group-url" class="fade-in-up" style="animation-delay: 0.1s">
+                <div class="input-area mb-4" style="min-height: 60px;"> <div id="group-url">
                         <input type="url" class="form-control" id="input-url" placeholder="请粘贴 http:// 或 https:// 开头的订阅链接">
                     </div>
-                    <div id="group-file" class="d-none fade-in-up">
-                        <input type="file" class="form-control" id="input-file" accept=".yaml,.yml,.json,.txt">
+                    <div id="group-file" class="d-none">
+                        <input type="file" class="form-control" id="input-file">
                     </div>
-                    <div id="group-json" class="d-none fade-in-up">
+                    <div id="group-json" class="d-none">
                         <textarea class="form-control font-monospace" id="input-json" rows="5" placeholder="在此粘贴 Base64、YAML 或 JSON 内容..." style="min-height: 120px;"></textarea>
                     </div>
                 </div>
 
-                <button type="button" id="btn-submit" class="btn-hero w-100">
+                <button type="button" id="btn-submit" class="btn-hero">
                     <span id="btn-text"><i class="fa-solid fa-bolt me-2"></i>立即提取</span>
                     <span id="btn-loading" class="d-none">
                         <span class="spinner-border spinner-border-sm me-2"></span>正在解析...
@@ -270,7 +278,7 @@
                     <div class="table-container">
                         <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
                             <table class="table align-middle">
-                                <thead class="sticky-top">
+                                <thead class="sticky-top" style="z-index: 10;">
                                     <tr>
                                         <th class="ps-4">节点名称</th>
                                         <th class="text-center">类型</th>
@@ -288,7 +296,7 @@
                     <textarea id="result-textarea" class="form-control font-monospace small" rows="12" readonly onclick="this.select()"></textarea>
                 </div>
 
-                <button id="btn-copy-all" class="btn-hero w-100 mt-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);">
+                <button type="button" id="btn-copy-all" class="btn-hero mt-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 20px -6px rgba(16, 185, 129, 0.5);">
                     <i class="fa-solid fa-copy me-2"></i>一键复制全部链接
                 </button>
             </div>
@@ -297,143 +305,254 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // UI 引用
-        const ui = {
-            inputs: { url: document.getElementById('group-url'), file: document.getElementById('group-file'), json: document.getElementById('group-json') },
-            views: { table: document.getElementById('view-table'), text: document.getElementById('view-text') },
-            tabs: { table: document.getElementById('tab-table'), text: document.getElementById('tab-text') },
-            btn: { submit: document.getElementById('btn-submit'), text: document.getElementById('btn-text'), loading: document.getElementById('btn-loading') },
-            progress: { section: document.getElementById('progress-section'), bar: document.getElementById('progress-bar'), status: document.getElementById('progress-status'), percent: document.getElementById('progress-percent') },
-            result: { section: document.getElementById('result-section'), summary: document.getElementById('result-summary'), tbody: document.getElementById('result-tbody'), textarea: document.getElementById('result-textarea') },
-            error: { alert: document.getElementById('error-alert'), msg: document.getElementById('error-msg') }
-        };
-
-        // 输入切换
-        document.querySelectorAll('input[name="inputType"]').forEach(r => r.addEventListener('change', (e) => {
-            Object.values(ui.inputs).forEach(el => el.classList.add('d-none'));
-            ui.inputs[e.target.value].classList.remove('d-none');
-            hideError();
-        }));
-
-        // 视图切换 (简化版)
-        ui.tabs.table.addEventListener('click', () => switchView('table'));
-        ui.tabs.text.addEventListener('click', () => switchView('text'));
-        function switchView(viewName) {
-            ui.views.table.classList.toggle('d-none', viewName !== 'table');
-            ui.views.text.classList.toggle('d-none', viewName !== 'text');
-            ui.tabs.table.className = viewName === 'table' ? 'btn btn-sm btn-primary rounded-pill px-3' : 'btn btn-sm text-secondary rounded-pill px-3';
-            ui.tabs.text.className = viewName === 'text' ? 'btn btn-sm btn-primary rounded-pill px-3' : 'btn btn-sm text-secondary rounded-pill px-3';
+        // 安全获取元素的辅助函数
+        function getEl(id) {
+            const el = document.getElementById(id);
+            if (!el) console.error(`Element with id '${id}' not found!`);
+            return el;
         }
 
-        // 提交逻辑
-        ui.btn.submit.addEventListener('click', async () => {
-            resetUI();
-            const type = document.querySelector('input[name="inputType"]:checked').value;
-            const formData = new FormData();
-            formData.append('inputType', type);
+        document.addEventListener('DOMContentLoaded', () => {
+            const ui = {
+                inputs: {
+                    url: getEl('group-url'),
+                    file: getEl('group-file'),
+                    json: getEl('group-json')
+                },
+                views: {
+                    table: getEl('view-table'),
+                    text: getEl('view-text')
+                },
+                tabs: {
+                    table: getEl('tab-table'),
+                    text: getEl('tab-text')
+                },
+                btn: {
+                    submit: getEl('btn-submit'),
+                    text: getEl('btn-text'),
+                    loading: getEl('btn-loading'),
+                    copyAll: getEl('btn-copy-all')
+                },
+                progress: {
+                    section: getEl('progress-section'),
+                    bar: getEl('progress-bar'),
+                    status: getEl('progress-status'),
+                    percent: getEl('progress-percent')
+                },
+                result: {
+                    section: getEl('result-section'),
+                    summary: getEl('result-summary'),
+                    tbody: getEl('result-tbody'),
+                    textarea: getEl('result-textarea')
+                },
+                error: {
+                    alert: getEl('error-alert'),
+                    msg: getEl('error-msg')
+                }
+            };
 
-            if (type === 'url') {
-                const val = document.getElementById('input-url').value.trim();
-                if (!val) return showError('请输入订阅链接');
-                formData.append('url', val);
-            } else if (type === 'file') {
-                const file = document.getElementById('input-file').files[0];
-                if (!file) return showError('请选择文件');
-                formData.append('file', file);
-            } else {
-                const val = document.getElementById('input-json').value.trim();
-                if (!val) return showError('请输入文本内容');
-                formData.append('json_input', val);
+            // 切换输入类型
+            document.querySelectorAll('input[name="inputType"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    // 先隐藏所有
+                    Object.values(ui.inputs).forEach(el => el && el.classList.add('d-none'));
+                    // 再显示选中的
+                    const targetId = 'group-' + e.target.value;
+                    const targetEl = document.getElementById(targetId);
+                    if (targetEl) {
+                        targetEl.classList.remove('d-none');
+                    }
+                    hideError();
+                });
+            });
+
+            // 切换结果视图
+            if(ui.tabs.table && ui.tabs.text) {
+                ui.tabs.table.addEventListener('click', () => switchView('table'));
+                ui.tabs.text.addEventListener('click', () => switchView('text'));
             }
 
-            try {
-                setLoading(true);
-                let p = 5;
-                updateProgress(p, '正在发起请求...');
-                const timer = setInterval(() => { if(p < 90) updateProgress(p += Math.random()*5, '正在从服务器获取数据...') }, 300);
+            function switchView(viewName) {
+                ui.views.table.classList.toggle('d-none', viewName !== 'table');
+                ui.views.text.classList.toggle('d-none', viewName !== 'text');
                 
-                const res = await fetch('/api/extract', { method: 'POST', body: formData });
-                clearInterval(timer);
+                // 更新按钮样式
+                ui.tabs.table.className = viewName === 'table' 
+                    ? 'btn btn-sm btn-primary rounded-pill px-3' 
+                    : 'btn btn-sm text-secondary rounded-pill px-3';
+                ui.tabs.text.className = viewName === 'text' 
+                    ? 'btn btn-sm btn-primary rounded-pill px-3' 
+                    : 'btn btn-sm text-secondary rounded-pill px-3';
+            }
 
-                if (!res.ok) {
-                    const data = await res.json().catch(() => ({}));
-                    throw new Error(data.error || `请求失败 (${res.status})`);
+            // 提交表单
+            if(ui.btn.submit) {
+                ui.btn.submit.addEventListener('click', async (e) => {
+                    e.preventDefault(); // 双重保险防止刷新
+                    resetUI();
+                    
+                    const typeRadio = document.querySelector('input[name="inputType"]:checked');
+                    if(!typeRadio) return;
+                    const type = typeRadio.value;
+                    const formData = new FormData();
+                    formData.append('inputType', type);
+
+                    if (type === 'url') {
+                        const val = document.getElementById('input-url').value.trim();
+                        if (!val) return showError('请输入有效的订阅链接');
+                        formData.append('url', val);
+                    } else if (type === 'file') {
+                        const fileInput = document.getElementById('input-file');
+                        if (!fileInput.files || fileInput.files.length === 0) return showError('请选择一个文件');
+                        formData.append('file', fileInput.files[0]);
+                    } else {
+                        const val = document.getElementById('input-json').value.trim();
+                        if (!val) return showError('请输入需要解析的文本内容');
+                        formData.append('json_input', val);
+                    }
+
+                    try {
+                        setLoading(true);
+                        let p = 5;
+                        updateProgress(p, '正在建立连接...');
+                        // 模拟进度条，提升体验
+                        const timer = setInterval(() => {
+                            if (p < 85) {
+                                p += Math.random() * 8;
+                                updateProgress(p, '正在从服务器获取数据...');
+                            }
+                        }, 400);
+
+                        const res = await fetch('/api/extract', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        clearInterval(timer);
+
+                        if (!res.ok) {
+                            const data = await res.json().catch(() => ({}));
+                            throw new Error(data.error || `请求失败 (状态码: ${res.status})`);
+                        }
+
+                        updateProgress(100, '解析完成！');
+                        const data = await res.json();
+                        
+                        // 稍微延迟显示结果，让用户看到100%进度
+                        setTimeout(() => {
+                            showResults(data);
+                            ui.progress.section.classList.add('d-none');
+                        }, 500);
+
+                    } catch (err) {
+                        updateProgress(0, '操作失败');
+                        // 隐藏进度条，显示错误
+                        setTimeout(() => {
+                            ui.progress.section.classList.add('d-none');
+                            showError(err.message);
+                        }, 1000);
+                    } else {
+                        setLoading(false);
+                    }
+                });
+            }
+
+            // 一键复制
+            if(ui.btn.copyAll) {
+                ui.btn.copyAll.addEventListener('click', (e) => {
+                    const textToCopy = ui.result.textarea.value;
+                    if(!textToCopy) return;
+                    
+                    copyText(textToCopy, null, () => {
+                        const btn = e.currentTarget;
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>已复制全部!';
+                        // 临时禁用防止重复点击
+                        btn.disabled = true;
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.disabled = false;
+                        }, 2000);
+                    });
+                });
+            }
+
+            // 全局暴露给 HTML onclick 使用
+            window.copyText = function(text, btn, callback) {
+                navigator.clipboard.writeText(text).then(() => {
+                    if (btn) {
+                        const originalHtml = btn.innerHTML;
+                        btn.innerHTML = '<i class="fa-solid fa-check" style="color: #10b981;"></i>';
+                        btn.style.borderColor = '#10b981';
+                        setTimeout(() => {
+                            btn.innerHTML = originalHtml;
+                            btn.removeAttribute('style');
+                        }, 1500);
+                    }
+                    if (callback) callback();
+                }).catch(err => {
+                    console.error('Copy failed', err);
+                    alert('复制失败，请手动选择文本复制。可能因为没有 HTTPS 环境。');
+                });
+            };
+
+            // UI 辅助函数
+            function updateProgress(percent, status) {
+                ui.progress.section.classList.remove('d-none');
+                const p = Math.min(100, Math.max(0, Math.floor(percent)));
+                ui.progress.bar.style.width = `${p}%`;
+                ui.progress.percent.textContent = `${p}%`;
+                ui.progress.status.textContent = status;
+            }
+
+            function showResults(data) {
+                ui.result.section.classList.remove('d-none');
+                ui.result.summary.textContent = data.summary || '提取成功';
+                ui.result.textarea.value = data.all_links || '';
+                
+                if (data.nodes && Array.isArray(data.nodes)) {
+                    ui.result.tbody.innerHTML = data.nodes.map(n => `
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-truncate" style="max-width: 160px;" title="${n.info.name}">${n.info.name}</div>
+                            </td>
+                            <td class="text-center"><span class="node-tag tag-${n.info.type}">${n.info.type}</span></td>
+                            <td class="d-none d-md-table-cell font-monospace small opacity-50">${n.info.server}:${n.info.port}</td>
+                            <td class="text-end pe-4">
+                                <button class="btn-icon ms-auto" type="button" onclick="copyText('${n.link.replace(/'/g, "\\'")}', this)">
+                                    <i class="fa-regular fa-copy"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
                 }
-                updateProgress(100, '解析完成！');
-                const data = await res.json();
-                setTimeout(() => showResults(data), 500);
 
-            } catch (err) {
-                updateProgress(0, '失败');
+                // 滚动到结果区域
+                ui.result.section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function setLoading(isLoading) {
+                if(ui.btn.submit) ui.btn.submit.disabled = isLoading;
+                if(ui.btn.text) ui.btn.text.classList.toggle('d-none', isLoading);
+                if(ui.btn.loading) ui.btn.loading.classList.toggle('d-none', !isLoading);
+            }
+
+            function resetUI() {
+                ui.result.section.classList.add('d-none');
+                hideError();
                 ui.progress.section.classList.add('d-none');
-                showError(err.message);
-            } else {
-                setLoading(false);
+                ui.progress.bar.style.width = '0%';
+            }
+
+            function showError(msg) {
+                ui.error.msg.textContent = msg || '未知错误';
+                ui.error.alert.classList.remove('d-none');
+            }
+
+            function hideError() {
+                ui.error.alert.classList.add('d-none');
             }
         });
-
-        // 工具函数
-        function updateProgress(percent, status) {
-            ui.progress.section.classList.remove('d-none');
-            const p = Math.min(100, Math.floor(percent));
-            ui.progress.bar.style.width = `${p}%`;
-            ui.progress.percent.textContent = `${p}%`;
-            ui.progress.status.textContent = status;
-        }
-
-        function showResults(data) {
-            ui.progress.section.classList.add('d-none');
-            ui.result.section.classList.remove('d-none');
-            ui.result.summary.textContent = data.summary;
-            ui.result.textarea.value = data.all_links;
-            ui.result.tbody.innerHTML = data.nodes.map(n => `
-                <tr>
-                    <td class="ps-4">
-                        <div class="fw-bold text-truncate" style="max-width: 160px;" title="${n.info.name}">${n.info.name}</div>
-                    </td>
-                    <td class="text-center"><span class="node-tag tag-${n.info.type}">${n.info.type}</span></td>
-                    <td class="d-none d-md-table-cell font-monospace small opacity-50">${n.info.server}:${n.info.port}</td>
-                    <td class="text-end pe-4">
-                        <button class="btn-icon ms-auto" onclick="copyText('${n.link}', this)">
-                            <i class="fa-regular fa-copy"></i>
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            ui.result.section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-
-        function copyText(text, btn) {
-            navigator.clipboard.writeText(text).then(() => {
-                if(btn) {
-                    const old = btn.innerHTML;
-                    btn.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i>';
-                    btn.style.borderColor = '#10b981';
-                    btn.style.color = '#10b981';
-                    setTimeout(() => {
-                        btn.innerHTML = old;
-                        btn.removeAttribute('style');
-                    }, 1500);
-                }
-            }).catch(() => alert('复制失败，请手动复制'));
-        }
-
-        document.getElementById('btn-copy-all').addEventListener('click', (e) => {
-             copyText(ui.result.textarea.value);
-             const btn = e.currentTarget;
-             const oldHtml = btn.innerHTML;
-             btn.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i>已复制全部!';
-             setTimeout(() => btn.innerHTML = oldHtml, 2000);
-        });
-
-        function setLoading(isLoading) {
-            ui.btn.submit.disabled = isLoading;
-            ui.btn.text.classList.toggle('d-none', isLoading);
-            ui.btn.loading.classList.toggle('d-none', !isLoading);
-        }
-        function resetUI() { ui.result.section.classList.add('d-none'); hideError(); ui.progress.section.classList.add('d-none'); }
-        function showError(msg) { ui.error.msg.textContent = msg; ui.error.alert.classList.remove('d-none'); }
-        function hideError() { ui.error.alert.classList.add('d-none'); }
     </script>
 </body>
 </html>
