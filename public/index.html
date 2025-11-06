@@ -3,227 +3,152 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>V2RayN 节点提取器</title>
+    <title>V2RayN 节点提取器 Pro</title>
     <link rel="icon" href="https://www.svgrepo.com/show/513474/rocket.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #6366F1;
-            --primary-hover: #4F46E5;
-            --app-bg: linear-gradient(135deg, #0F172A 0%, #1E1B4B 50%, #312E81 100%);
-            --card-bg: rgba(30, 41, 59, 0.75);
-            --border-color: rgba(255, 255, 255, 0.1);
-            --text-primary: #F8FAFC;
-            --text-secondary: #94A3B8;
+            --primary: #6366F1; --bg-grad: linear-gradient(135deg, #0F172A 0%, #1E1B4B 100%);
+            --glass: rgba(30, 41, 59, 0.8); --border: rgba(255,255,255,0.1);
         }
         body {
-            background: var(--app-bg); min-height: 100vh; color: var(--text-primary);
-            font-family: 'Inter', sans-serif; padding: 20px;
-            display: flex; align-items: center; justify-content: center;
+            background: var(--bg-grad); min-height: 100vh; color: #F8FAFC;
+            font-family: 'Inter', sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center;
         }
-        .main-wrapper { width: 100%; max-width: 820px; margin: auto; }
-
-        /* === Pro 级毛玻璃卡片 === */
+        .main-box { width: 100%; max-width: 820px; }
         .glass-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--border-color);
-            border-radius: 24px; padding: 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            overflow: hidden; position: relative;
+            background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
-        /* 顶部光效 */
-        .glass-card::after {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        /* 导航 Tab */
+        .nav-pills-custom {
+            background: rgba(0,0,0,0.3); padding: 6px; border-radius: 16px; border: 1px solid var(--border);
         }
-
-        /* === 分段式 Tab === */
-        .nav-segment {
-            background: rgba(0,0,0,0.25); padding: 5px; border-radius: 14px;
-            border: 1px solid var(--border-color); display: flex;
+        .nav-pills-custom .nav-link {
+            color: #94A3B8; font-weight: 600; padding: 10px; border-radius: 12px; transition: all 0.3s;
         }
-        .nav-segment .nav-link {
-            flex: 1; color: var(--text-secondary); font-weight: 600; padding: 10px;
-            border-radius: 10px; transition: all 0.3s ease; text-align: center;
+        .nav-pills-custom .nav-link.active {
+            background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
-        .nav-segment .nav-link.active {
-            background: var(--primary-color); color: #fff;
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        /* 输入框 */
+        .input-box {
+            background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); border-radius: 16px; padding: 4px;
+            transition: all 0.3s;
         }
-        .nav-segment .nav-link i { margin-right: 6px; }
-
-        /* === 输入框 (核心修复点) === */
-        .input-group-custom {
-            background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color);
-            border-radius: 16px; padding: 6px; transition: all 0.3s;
-        }
-        .input-group-custom:focus-within {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
+        .input-box:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25); }
         .form-control {
-            background: transparent !important; border: none !important; color: var(--text-primary) !important;
-            padding: 12px 16px; font-size: 1rem;
+            background: transparent !important; border: none !important; color: #fff !important;
+            padding: 14px 18px; font-size: 16px;
         }
-        .form-control::placeholder { color: rgba(255,255,255,0.3); }
         .form-control:focus { box-shadow: none !important; }
-        /* 文件上传特殊处理 */
-        input[type="file"] { padding: 10px !important; height: auto !important; }
+        input[type="file"] { padding: 12px !important; }
         input[type="file"]::file-selector-button {
-            background: var(--primary-color); border: none; color: white; border-radius: 8px;
-            padding: 6px 12px; margin-right: 12px; transition: all 0.2s;
+            background: var(--primary); border: none; color: #fff; border-radius: 8px;
+            padding: 6px 12px; margin-right: 12px; cursor: pointer;
         }
-
-        /* === 按钮 === */
-        .btn-pro {
-            background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
-            border: none; padding: 14px; border-radius: 14px; color: white; font-weight: 700;
-            width: 100%; transition: all 0.2s; position: relative; overflow: hidden;
+        /* 按钮 (提高 z-index 防止被遮挡) */
+        .btn-main {
+            background: linear-gradient(135deg, #6366F1, #4F46E5); border: none; padding: 16px;
+            border-radius: 16px; color: #fff; font-weight: 700; font-size: 18px; width: 100%;
+            transition: all 0.2s; position: relative; z-index: 5; cursor: pointer;
         }
-        .btn-pro:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.5); }
-        .btn-pro:active { transform: scale(0.98); }
-
-        /* === 进度条 === */
-        .progress-slim {
-            height: 6px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;
-            margin-top: 20px;
+        .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.6); }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-main:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        /* 结果表格 */
+        .table-wrap {
+            background: rgba(15, 23, 42, 0.5); border-radius: 18px; border: 1px solid var(--border); overflow: hidden;
         }
-        .progress-bar-glow {
-            background: var(--primary-color); box-shadow: 0 0 10px var(--primary-color);
-            transition: width 0.4s ease;
-        }
-
-        /* === 结果区域 === */
-        .result-box {
-            background: rgba(15, 23, 42, 0.5); border-radius: 18px; border: 1px solid var(--border-color);
-            overflow: hidden;
-        }
-        .table { --bs-table-bg: transparent; margin: 0; }
-        .table thead th {
-            background: rgba(0,0,0,0.2); color: var(--text-secondary); font-weight: 600;
-            text-transform: uppercase; font-size: 0.85rem; padding: 16px; border-bottom: 1px solid var(--border-color);
-        }
-        .table tbody td {
-            padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05);
-            color: var(--text-primary); vertical-align: middle;
-        }
-        .node-badge {
-            padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 800;
-            letter-spacing: 0.5px; display: inline-block;
-        }
-        .badge-vmess { background: rgba(168, 85, 247, 0.15); color: #d8b4fe; }
-        .badge-vless { background: rgba(6, 182, 212, 0.15); color: #67e8f9; }
-        .badge-ss { background: rgba(34, 197, 94, 0.15); color: #86efac; }
-        .badge-trojan { background: rgba(249, 115, 22, 0.15); color: #fdba74; }
-        .badge-hysteria2 { background: rgba(236, 72, 153, 0.15); color: #f9a8d4; }
-
-        /* === 移动端适配 === */
-        @media (max-width: 768px) {
-            .glass-card { padding: 24px 20px; }
-            .nav-segment .nav-link { padding: 8px 5px; font-size: 0.9rem; }
-            .nav-segment .nav-link i { display: none; } /* 手机上隐藏图标只显示文字 */
-            .table thead th, .table tbody td { padding: 12px; }
-        }
-        .animate-up { animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
-        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+        .table { --bs-table-bg: transparent; margin: 0; color: #e2e8f0; }
+        .table th { background: rgba(0,0,0,0.2); text-transform: uppercase; font-size: 0.85rem; padding: 16px; border-bottom: 1px solid var(--border); }
+        .table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+        .badge-custom { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; background: rgba(255,255,255,0.1); }
+        
+        @media (max-width: 768px) { .glass-card { padding: 24px 20px; } }
+        .d-none { display: none !important; }
     </style>
 </head>
 <body>
-    <div class="main-wrapper">
-        <div class="glass-card animate-up">
+    <div class="main-box">
+        <div class="glass-card">
             <div class="text-center mb-5">
-                <h1 class="fw-bold" style="background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                <h2 class="fw-bold display-6" style="background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
                     V2RayN 提取器
-                </h1>
-                <p class="text-secondary">Pro Version</p>
+                </h2>
+                <p class="text-white-50">Pro Version</p>
             </div>
 
-            <div class="nav nav-segment mb-4" role="tablist">
-                <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pane-url" type="button" role="tab">
-                    <i class="fa-solid fa-link"></i>订阅链接
-                </button>
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pane-file" type="button" role="tab">
-                    <i class="fa-solid fa-file-arrow-up"></i>文件上传
-                </button>
-                <button class="nav-link" data-bs-toggle="pill" data-bs-target="#pane-json" type="button" role="tab">
-                    <i class="fa-solid fa-code"></i>文本内容
-                </button>
-            </div>
+            <ul class="nav nav-pills nav-fill nav-pills-custom mb-4" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="url-tab" data-bs-toggle="pill" data-bs-target="#url-pane" type="button" role="tab">
+                        <i class="fa-solid fa-link me-2"></i>订阅链接
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="file-tab" data-bs-toggle="pill" data-bs-target="#file-pane" type="button" role="tab">
+                        <i class="fa-solid fa-file-arrow-up me-2"></i>文件上传
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="json-tab" data-bs-toggle="pill" data-bs-target="#json-pane" type="button" role="tab">
+                        <i class="fa-solid fa-code me-2"></i>文本内容
+                    </button>
+                </li>
+            </ul>
 
-            <form id="main-form" onsubmit="return false;">
-                <div class="tab-content mb-4">
-                    <div class="tab-pane fade show active" id="pane-url" role="tabpanel">
-                        <div class="input-group-custom">
-                            <input type="url" class="form-control" id="input-url" placeholder="在此粘贴订阅链接 (http://...)">
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="pane-file" role="tabpanel">
-                        <div class="input-group-custom">
-                            <input type="file" class="form-control" id="input-file">
-                        </div>
-                    </div>
-                    <div class="tab-pane fade" id="pane-json" role="tabpanel">
-                        <div class="input-group-custom">
-                            <textarea class="form-control font-monospace" id="input-json" rows="6" placeholder="在此粘贴节点配置内容..."></textarea>
-                        </div>
+            <div class="tab-content mb-4" id="myTabContent">
+                <div class="tab-pane fade show active" id="url-pane" role="tabpanel">
+                    <div class="input-box">
+                        <input type="url" class="form-control" id="inp-url" placeholder="在此粘贴 http:// 或 https:// 开头的链接">
                     </div>
                 </div>
-
-                <button id="btn-submit" class="btn-pro">
-                    <span id="btn-txt"><i class="fa-solid fa-bolt me-2"></i>立即提取</span>
-                    <span id="btn-load" class="d-none"><span class="spinner-border spinner-border-sm me-2"></span>处理中...</span>
-                </button>
-
-                <div id="progress-wrap" class="d-none">
-                    <div class="d-flex justify-content-between small text-secondary mt-3 px-1">
-                        <span id="progress-txt">准备就绪...</span>
-                        <span id="progress-pct">0%</span>
-                    </div>
-                    <div class="progress-slim">
-                        <div id="progress-bar" class="progress-bar-glow" style="width: 0%"></div>
+                <div class="tab-pane fade" id="file-pane" role="tabpanel">
+                    <div class="input-box">
+                        <input type="file" class="form-control" id="inp-file">
                     </div>
                 </div>
-            </form>
-
-            <div id="error-box" class="alert alert-danger d-none mt-4 border-0" style="background: rgba(239,68,68,0.15); color: #fca5a5; border-radius: 14px;">
-                <i class="fa-solid fa-circle-exclamation me-2"></i><span id="error-msg"></span>
+                <div class="tab-pane fade" id="json-pane" role="tabpanel">
+                    <div class="input-box">
+                        <textarea class="form-control font-monospace" id="inp-json" rows="6" placeholder="在此粘贴配置内容..."></textarea>
+                    </div>
+                </div>
             </div>
 
-            <div id="result-wrap" class="d-none mt-5 animate-up">
+            <button id="btn-go" class="btn-main">
+                <span id="txt-go"><i class="fa-solid fa-bolt me-2"></i>立即提取</span>
+                <span id="load-go" class="d-none"><span class="spinner-border spinner-border-sm me-2"></span>处理中...</span>
+            </button>
+
+            <div id="err-box" class="alert alert-danger d-none mt-4 border-0 p-3" style="background: rgba(239,68,68,0.2); color: #fca5a5; border-radius: 16px;">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i><span id="err-msg"></span>
+            </div>
+
+            <div id="res-box" class="d-none mt-5">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0 fw-bold">提取结果 <i class="fa-solid fa-circle-check text-success ms-1"></i></h5>
-                    <div class="btn-group btn-group-sm p-1 rounded-pill" style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color);">
-                        <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-view-table">列表</button>
-                        <button class="btn btn-sm text-secondary rounded-pill px-3" id="btn-view-text">文本</button>
+                    <h5 class="mb-0 fw-bold">🎉 提取成功</h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-primary" onclick="showTab('table')">列表</button>
+                        <button class="btn btn-outline-light" onclick="showTab('text')">文本</button>
                     </div>
                 </div>
-
-                <div id="view-table" class="result-box">
+                <div id="tab-table" class="table-wrap">
                     <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
                         <table class="table align-middle">
-                            <thead class="sticky-top">
-                                <tr>
-                                    <th class="ps-4">节点名称</th>
-                                    <th class="text-center">类型</th>
-                                    <th class="text-end pe-4">操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="result-tbody"></tbody>
+                            <thead class="sticky-top"><tr><th class="ps-4">名称</th><th>类型</th><th class="text-end pe-4">操作</th></tr></thead>
+                            <tbody id="res-tbody"></tbody>
                         </table>
                     </div>
                 </div>
-
-                <div id="view-text" class="d-none">
-                    <div class="input-group-custom">
-                        <textarea id="result-area" class="form-control font-monospace small" rows="12" readonly onclick="this.select()"></textarea>
+                <div id="tab-text" class="d-none">
+                    <div class="input-box">
+                        <textarea id="res-text" class="form-control font-monospace small" rows="12" readonly onclick="this.select()"></textarea>
                     </div>
                 </div>
-
-                <button id="btn-copy-all" class="btn-pro mt-4" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <button id="btn-copy" class="btn-main mt-4" style="background: linear-gradient(135deg, #10b981, #059669);">
                     <i class="fa-solid fa-copy me-2"></i>一键复制全部
                 </button>
             </div>
@@ -232,134 +157,95 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const ui = {
-                tabs: { url: document.querySelector('[data-bs-target="#pane-url"]'), file: document.querySelector('[data-bs-target="#pane-file"]'), json: document.querySelector('[data-bs-target="#pane-json"]') },
-                btnSubmit: document.getElementById('btn-submit'),
-                btnTxt: document.getElementById('btn-txt'),
-                btnLoad: document.getElementById('btn-load'),
-                progressWrap: document.getElementById('progress-wrap'),
-                progressBar: document.getElementById('progress-bar'),
-                progressTxt: document.getElementById('progress-txt'),
-                progressPct: document.getElementById('progress-pct'),
-                errorBox: document.getElementById('error-box'),
-                errorMsg: document.getElementById('error-msg'),
-                resultWrap: document.getElementById('result-wrap'),
-                resultTbody: document.getElementById('result-tbody'),
-                resultArea: document.getElementById('result-area'),
-                btnViewTable: document.getElementById('btn-view-table'),
-                btnViewText: document.getElementById('btn-view-text'),
-                viewTable: document.getElementById('view-table'),
-                viewText: document.getElementById('view-text'),
-                btnCopyAll: document.getElementById('btn-copy-all')
-            };
+        // 极简且稳健的 JS
+        const get = (id) => document.getElementById(id);
+        let currentView = 'table';
 
-            // 视图切换
-            ui.btnViewTable.addEventListener('click', () => switchView(true));
-            ui.btnViewText.addEventListener('click', () => switchView(false));
-            function switchView(isTable) {
-                ui.viewTable.classList.toggle('d-none', !isTable);
-                ui.viewText.classList.toggle('d-none', isTable);
-                ui.btnViewTable.className = isTable ? 'btn btn-sm btn-primary rounded-pill px-3' : 'btn btn-sm text-secondary rounded-pill px-3';
-                ui.btnViewText.className = !isTable ? 'btn btn-sm btn-primary rounded-pill px-3' : 'btn btn-sm text-secondary rounded-pill px-3';
+        // 1. 提交事件 (直接绑定，防止 DOMContentLoaded 延迟)
+        get('btn-go').onclick = async () => {
+            resetUI();
+            const formData = new FormData();
+            let type = 'url';
+
+            // 判断当前激活的 Tab
+            if (get('file-tab').classList.contains('active')) type = 'file';
+            if (get('json-tab').classList.contains('active')) type = 'json';
+            formData.append('inputType', type);
+
+            // 验证输入
+            if (type === 'url') {
+                const val = get('inp-url').value.trim();
+                if (!val) return showError('请输入订阅链接');
+                formData.append('url', val);
+            } else if (type === 'file') {
+                if (!get('inp-file').files.length) return showError('请选择文件');
+                formData.append('file', get('inp-file').files[0]);
+            } else {
+                const val = get('inp-json').value.trim();
+                if (!val) return showError('请输入文本内容');
+                formData.append('json_input', val);
             }
 
-            // 提交
-            ui.btnSubmit.addEventListener('click', async () => {
-                resetState();
-                const formData = new FormData();
-                let type = 'url';
-                if (ui.tabs.file.classList.contains('active')) type = 'file';
-                if (ui.tabs.json.classList.contains('active')) type = 'json';
-                formData.append('inputType', type);
-
-                if (type === 'url') {
-                    const val = document.getElementById('input-url').value.trim();
-                    if (!val) return showError('请输入订阅链接');
-                    formData.append('url', val);
-                } else if (type === 'file') {
-                    const files = document.getElementById('input-file').files;
-                    if (!files.length) return showError('请选择文件');
-                    formData.append('file', files[0]);
-                } else {
-                    const val = document.getElementById('input-json').value.trim();
-                    if (!val) return showError('请输入文本内容');
-                    formData.append('json_input', val);
-                }
-
-                try {
-                    setLoading(true);
-                    let p = 5; updateProgress(p, '正在连接...');
-                    const timer = setInterval(() => { if(p<90) updateProgress(p+=Math.random()*6, '正在解析...') }, 400);
-                    
-                    const res = await fetch('/api/extract', { method: 'POST', body: formData });
-                    clearInterval(timer);
-
-                    if (!res.ok) {
-                        const data = await res.json().catch(() => ({}));
-                        throw new Error(data.error || `请求失败 (${res.status})`);
-                    }
-                    updateProgress(100, '完成！');
-                    const data = await res.json();
-                    setTimeout(() => showResults(data), 500);
-                } catch (err) {
-                    updateProgress(0, '失败');
-                    ui.progressWrap.classList.add('d-none');
-                    showError(err.message);
-                } else {
-                    setLoading(false);
-                }
-            });
-
-            // 复制
-            ui.btnCopyAll.addEventListener('click', () => doCopy(ui.resultArea.value, ui.btnCopyAll));
-            window.copyOne = (btn, text) => doCopy(decodeURIComponent(text), btn, true);
-
-            function doCopy(text, btn, isIcon = false) {
-                navigator.clipboard.writeText(text).then(() => {
-                    const old = btn.innerHTML;
-                    btn.innerHTML = isIcon ? '<i class="fa-solid fa-check text-success"></i>' : '<i class="fa-solid fa-check me-2"></i>已复制!';
-                    setTimeout(() => btn.innerHTML = old, 2000);
-                }).catch(() => alert('复制失败，请手动复制'));
+            try {
+                setLoading(true);
+                const res = await fetch('/api/extract', { method: 'POST', body: formData });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || `服务器错误 (${res.status})`);
+                
+                showResult(data);
+            } catch (e) {
+                showError(e.message || '未知错误，请检查网络');
+            } finally {
+                setLoading(false);
             }
+        };
 
-            function updateProgress(pct, txt) {
-                ui.progressWrap.classList.remove('d-none');
-                const p = Math.min(100, Math.floor(pct));
-                ui.progressBar.style.width = `${p}%`;
-                ui.progressPct.textContent = `${p}%`;
-                ui.progressTxt.textContent = txt;
-            }
-            function showResults(data) {
-                ui.progressWrap.classList.add('d-none');
-                ui.resultWrap.classList.remove('d-none');
-                ui.resultArea.value = data.all_links;
-                ui.resultTbody.innerHTML = (data.nodes||[]).map(n => `
-                    <tr>
-                        <td class="ps-4"><div class="fw-bold text-truncate" style="max-width: 160px;" title="${n.info.name}">${n.info.name}</div></td>
-                        <td class="text-center"><span class="node-badge badge-${n.info.type}">${n.info.type}</span></td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-sm btn-outline-light" style="border-color: var(--border-color); color: var(--text-secondary);" onclick="copyOne(this, '${encodeURIComponent(n.link)}')">
-                                <i class="fa-regular fa-copy"></i>
-                            </button>
-                        </td>
-                    </tr>`).join('');
-                ui.resultWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
-            function setLoading(loading) {
-                ui.btnSubmit.disabled = loading;
-                ui.btnTxt.classList.toggle('d-none', loading);
-                ui.btnLoad.classList.toggle('d-none', !loading);
-            }
-            function resetState() {
-                ui.errorBox.classList.add('d-none');
-                ui.resultWrap.classList.add('d-none');
-            }
-            function showError(msg) {
-                ui.errorMsg.textContent = msg;
-                ui.errorBox.classList.remove('d-none');
-            }
-        });
+        // 2. 辅助功能
+        get('btn-copy').onclick = () => doCopy(get('res-text').value, get('btn-copy'));
+        
+        window.copyOne = (btn, text) => doCopy(decodeURIComponent(text), btn, true);
+        window.showTab = (view) => {
+            get('tab-table').classList.toggle('d-none', view !== 'table');
+            get('tab-text').classList.toggle('d-none', view !== 'text');
+        };
+
+        function doCopy(text, btn, isSmall=false) {
+            navigator.clipboard.writeText(text).then(() => {
+                const old = btn.innerHTML;
+                btn.innerHTML = isSmall ? '<i class="fa-solid fa-check text-success"></i>' : '<i class="fa-solid fa-check me-2"></i>已复制!';
+                setTimeout(() => btn.innerHTML = old, 2000);
+            }).catch(() => alert('复制失败，请手动复制'));
+        }
+
+        function showResult(data) {
+            get('res-box').classList.remove('d-none');
+            get('res-text').value = data.all_links;
+            get('res-tbody').innerHTML = (data.nodes||[]).map(n => `
+                <tr>
+                    <td class="ps-4 fw-bold text-truncate" style="max-width: 150px;" title="${n.info.name}">${n.info.name}</td>
+                    <td><span class="badge-custom">${n.info.type}</span></td>
+                    <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-outline-light" onclick="copyOne(this, '${encodeURIComponent(n.link)}')">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </td>
+                </tr>`).join('');
+            get('res-box').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function setLoading(isLoading) {
+            get('btn-go').disabled = isLoading;
+            get('txt-go').classList.toggle('d-none', isLoading);
+            get('load-go').classList.toggle('d-none', !isLoading);
+        }
+        function resetUI() {
+            get('err-box').classList.add('d-none');
+            get('res-box').classList.add('d-none');
+        }
+        function showError(msg) {
+            get('err-msg').textContent = msg;
+            get('err-box').classList.remove('d-none');
+        }
     </script>
 </body>
 </html>
