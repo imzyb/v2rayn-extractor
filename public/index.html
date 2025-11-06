@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>V2RayN 节点提取器 Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>V2RayN 节点提取器</title>
     <link rel="icon" href="https://www.svgrepo.com/show/513474/rocket.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -19,22 +19,27 @@
             font-family: 'Inter', sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center;
         }
         .main-box { width: 100%; max-width: 820px; }
+        
+        /* === 卡片样式 === */
         .glass-card {
             background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border); border-radius: 24px; padding: 32px;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
         }
-        /* 导航 Tab */
+
+        /* === 导航 Tab (核心优化点) === */
         .nav-pills-custom {
             background: rgba(0,0,0,0.3); padding: 6px; border-radius: 16px; border: 1px solid var(--border);
         }
         .nav-pills-custom .nav-link {
-            color: var(--text-secondary); font-weight: 600; padding: 10px; border-radius: 12px; transition: all 0.3s;
+            color: var(--text-secondary); font-weight: 600; padding: 10px 15px; border-radius: 12px; transition: all 0.3s;
+            white-space: nowrap; /* 防止文字换行 */
         }
         .nav-pills-custom .nav-link.active {
             background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
         }
-        /* 输入框 */
+
+        /* === 输入框 === */
         .input-box {
             background: rgba(15, 23, 42, 0.5); border: 1px solid var(--border); border-radius: 16px; padding: 4px;
             transition: all 0.3s;
@@ -51,7 +56,8 @@
             background: var(--primary); border: none; color: #fff; border-radius: 8px;
             padding: 6px 12px; margin-right: 12px; cursor: pointer;
         }
-        /* 按钮 */
+
+        /* === 按钮 === */
         .btn-main {
             background: linear-gradient(135deg, #6366F1, #4F46E5); border: none; padding: 16px;
             border-radius: 16px; color: #fff; font-weight: 700; font-size: 18px; width: 100%;
@@ -60,51 +66,46 @@
         .btn-main:hover { transform: translateY(-2px); box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.6); }
         .btn-main:active { transform: scale(0.98); }
         .btn-main:disabled { opacity: 0.7; cursor: not-allowed; }
-        
-        /* === 结果表格优化 === */
-        .table-wrap {
-            background: rgba(15, 23, 42, 0.5); border-radius: 18px; border: 1px solid var(--border); overflow: hidden;
+
+        /* === 移动端专属优化 === */
+        @media (max-width: 576px) {
+            body { padding: 15px; align-items: flex-start; pt-5; }
+            .main-box { margin-top: 20px; }
+            .glass-card { padding: 24px 16px; /* 减小卡片内边距 */ }
+            .display-6 { font-size: 2rem; /* 减小标题字号 */ }
+            
+            /* 紧凑型导航栏 */
+            .nav-pills-custom { padding: 4px; }
+            .nav-pills-custom .nav-link {
+                padding: 10px 4px; /* 极小的水平内边距 */
+                font-size: 14px;
+            }
+            .nav-pills-custom .nav-link i {
+                display: none; /* 隐藏图标，只显示文字，节省空间 */
+            }
+            
+            .form-control { font-size: 14px; padding: 12px 14px; }
+            .btn-main { padding: 14px; font-size: 16px; }
         }
-        .table {
-            --bs-table-bg: transparent;
-            --bs-table-color: var(--text-primary); /* 修复文字颜色 */
-            --bs-table-hover-color: var(--text-primary);
-            --bs-table-hover-bg: rgba(99, 102, 241, 0.1);
-            margin: 0;
-        }
-        .table th {
-            background: rgba(0,0,0,0.25); color: var(--text-secondary) !important;
-            text-transform: uppercase; font-size: 0.85rem; padding: 16px; border-bottom: 1px solid var(--border);
-        }
-        .table td {
-            padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle;
-            color: var(--text-primary); /* 确保内容文字也是亮色 */
-        }
+
+        /* ... 其他通用样式 ... */
+        .table-wrap { background: rgba(15, 23, 42, 0.5); border-radius: 18px; border: 1px solid var(--border); overflow: hidden; }
+        .table { --bs-table-bg: transparent; --bs-table-color: var(--text-primary); --bs-table-hover-bg: rgba(99, 102, 241, 0.1); --bs-table-hover-color: var(--text-primary); margin: 0; }
+        .table th { background: rgba(0,0,0,0.25); color: var(--text-secondary) !important; text-transform: uppercase; font-size: 0.85rem; padding: 16px; border-bottom: 1px solid var(--border); }
+        .table td { padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); vertical-align: middle; color: var(--text-primary); }
         .badge-custom { padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; background: rgba(255,255,255,0.1); }
-
-        /* === 新的视图切换按钮 === */
-        .view-toggle {
-            background: rgba(0,0,0,0.3); border-radius: 50rem; padding: 4px; border: 1px solid var(--border); display: inline-flex;
-        }
-        .view-toggle .btn-toggle {
-            border: none; background: transparent; color: var(--text-secondary); padding: 6px 16px;
-            border-radius: 50rem; font-size: 14px; font-weight: 600; transition: all 0.2s;
-        }
-        .view-toggle .btn-toggle.active {
-            background: var(--primary); color: #fff; box-shadow: 0 2px 10px -3px rgba(99, 102, 241, 0.5);
-        }
-        .view-toggle .btn-toggle:hover:not(.active) { color: #fff; background: rgba(255,255,255,0.1); }
-
-        @media (max-width: 768px) { .glass-card { padding: 24px 20px; } }
+        .view-toggle { background: rgba(0,0,0,0.3); border-radius: 50rem; padding: 4px; border: 1px solid var(--border); display: inline-flex; }
+        .view-toggle .btn-toggle { border: none; background: transparent; color: var(--text-secondary); padding: 6px 16px; border-radius: 50rem; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .view-toggle .btn-toggle.active { background: var(--primary); color: #fff; box-shadow: 0 2px 10px -3px rgba(99, 102, 241, 0.5); }
         .d-none { display: none !important; }
     </style>
 </head>
 <body>
     <div class="main-box">
         <div class="glass-card">
-            <div class="text-center mb-5">
+            <div class="text-center mb-4 mb-md-5">
                 <h2 class="fw-bold display-6" style="background: linear-gradient(to right, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-                    V2RayN 提取器
+                    V2RayN 节点提取器
                 </h2>
                 <p class="text-white-50">Pro Version</p>
             </div>
@@ -159,10 +160,10 @@
                     <h5 class="mb-0 fw-bold">🎉 提取成功</h5>
                     <div class="view-toggle">
                         <button class="btn-toggle active" id="btn-view-table">
-                            <i class="fa-solid fa-list-ul me-2"></i>列表
+                            <i class="fa-solid fa-list-ul me-md-2"></i><span class="d-none d-md-inline">列表</span>
                         </button>
                         <button class="btn-toggle" id="btn-view-text">
-                            <i class="fa-regular fa-file-lines me-2"></i>文本
+                            <i class="fa-regular fa-file-lines me-md-2"></i><span class="d-none d-md-inline">文本</span>
                         </button>
                     </div>
                 </div>
@@ -234,10 +235,9 @@
             }
         };
 
-        // 视图切换逻辑
+        // 视图切换
         get('btn-view-table').onclick = () => switchView(true);
         get('btn-view-text').onclick = () => switchView(false);
-
         function switchView(isTable) {
             get('tab-table').classList.toggle('d-none', !isTable);
             get('tab-text').classList.toggle('d-none', isTable);
@@ -248,7 +248,6 @@
         // 辅助功能
         get('btn-copy').onclick = () => doCopy(get('res-text').value, get('btn-copy'));
         window.copyOne = (btn, text) => doCopy(decodeURIComponent(text), btn, true);
-
         function doCopy(text, btn, isSmall=false) {
             navigator.clipboard.writeText(text).then(() => {
                 const old = btn.innerHTML;
@@ -256,13 +255,12 @@
                 setTimeout(() => btn.innerHTML = old, 2000);
             }).catch(() => alert('复制失败，请手动复制'));
         }
-
         function showResult(data) {
             get('res-box').classList.remove('d-none');
             get('res-text').value = data.all_links;
             get('res-tbody').innerHTML = (data.nodes||[]).map(n => `
                 <tr>
-                    <td class="ps-4 fw-bold text-truncate" style="max-width: 180px;" title="${n.info.name}">${n.info.name}</td>
+                    <td class="ps-4 fw-bold text-truncate" style="max-width: 140px;" title="${n.info.name}">${n.info.name}</td>
                     <td class="text-center"><span class="badge-custom">${n.info.type}</span></td>
                     <td class="text-end pe-4">
                         <button class="btn btn-sm btn-outline-light" onclick="copyOne(this, '${encodeURIComponent(n.link)}')">
@@ -272,7 +270,6 @@
                 </tr>`).join('');
             get('res-box').scrollIntoView({ behavior: 'smooth' });
         }
-
         function setLoading(isLoading) {
             get('btn-go').disabled = isLoading;
             get('txt-go').classList.toggle('d-none', isLoading);
