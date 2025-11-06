@@ -14,6 +14,9 @@ const upload = multer({ storage: multer.memoryStorage() });
 function extractNodesFromYamlContent(content) {
     try {
         const data = yaml.load(content);
+        if (Array.isArray(data)) {
+            return data; 
+        }
         return (data && data.proxies && Array.isArray(data.proxies)) ? data.proxies : [];
     } catch (e) {
         return [];
@@ -211,4 +214,5 @@ if (process.env.VERCEL !== '1') {
 
 // 导出 app 供 Vercel 使用
 module.exports = app;
+
 
