@@ -206,7 +206,7 @@ app.post('/api/extract', upload.single('file'), async (req, res) => {
 
 // 在本地开发时，需要一个根路由来提供index.html
 if (process.env.VERCEL !== '1') {
-    app.use(express.static(path.join(__dirname, 'public')));
+    app.use(express.static(path.join(__dirname, '../public')));
     app.listen(port, () => {
         console.log(`服务器正在 http://localhost:${port} 上运行`);
     });
@@ -214,5 +214,6 @@ if (process.env.VERCEL !== '1') {
 
 // 导出 app 供 Vercel 使用
 module.exports = app;
+
 
 
