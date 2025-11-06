@@ -3,56 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>V2RayN 节点提取器 Pro</title>
+    <title>V2RayN 节点提取器</title>
     <link rel="icon" href="https://www.svgrepo.com/show/513474/rocket.svg">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --primary-color: #6366F1; --primary-color-hover: #4F46E5; --glass-bg: rgba(30, 30, 45, 0.65); }
+        :root { --primary-color: #6366F1; --primary-color-hover: #4F46E5; --glass-bg: rgba(30, 30, 45, 0.8); }
         body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh; color: #fff; font-family: 'Inter', sans-serif; padding: 20px;
+            background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
+            min-height: 100vh; color: #e0e0e0; font-family: 'Inter', sans-serif; padding: 20px;
         }
         .main-container { max-width: 800px; margin: 40px auto; }
         .glass-card {
             background: var(--glass-bg); backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1); border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4); padding: 40px;
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); padding: 40px;
         }
+        /* 优化输入框可见性 */
         .form-control, .form-select {
-            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); color: #fff;
+            background: rgba(255,255,255,0.05) !important; 
+            border: 1px solid rgba(255,255,255,0.1) !important; 
+            color: #fff !important;
         }
         .form-control:focus {
-            background: rgba(0,0,0,0.4); border-color: var(--primary-color); color: #fff; box-shadow: none;
+            background: rgba(255,255,255,0.08) !important;
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25) !important;
         }
+        .form-control::placeholder { color: rgba(255,255,255,0.4); }
+        
         .btn-primary {
             background: var(--primary-color); border: none; padding: 12px 24px; font-weight: 600;
         }
         .btn-primary:hover { background: var(--primary-color-hover); }
+        .btn-check:checked + .btn-outline-primary {
+            background-color: var(--primary-color); border-color: var(--primary-color); color: #fff;
+        }
         .nav-pills .nav-link { color: rgba(255,255,255,0.6); cursor: pointer; }
         .nav-pills .nav-link.active { background: var(--primary-color); color: #fff; }
         
-        /* 表格样式优化 */
         .table-dark { --bs-table-bg: transparent; }
         .table td, .table th { vertical-align: middle; border-color: rgba(255,255,255,0.1); }
         .node-tag {
-            padding: 2px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; text-transform: uppercase;
+            padding: 3px 8px; border-radius: 4px; font-size: 0.75em; font-weight: 700; text-transform: uppercase;
         }
-        .tag-vmess { background: #9c27b0; } .tag-vless { background: #00bcd4; color: #000; }
-        .tag-ss { background: #4caf50; } .tag-trojan { background: #ff9800; color: #000; }
-        .tag-hysteria2 { background: #e91e63; }
+        .tag-vmess { background: #9c27b0; color: #fff; } .tag-vless { background: #00bcd4; color: #000; }
+        .tag-ss { background: #4caf50; color: #fff; } .tag-trojan { background: #ff9800; color: #000; }
+        .tag-hysteria2 { background: #e91e63; color: #fff; }
     </style>
 </head>
 <body>
     <div class="container main-container">
         <div class="glass-card">
             <h2 class="text-center fw-bold mb-4">
-                <i class="fa-solid fa-rocket text-primary me-2"></i>V2RayN 提取器 Pro
+                <i class="fa-solid fa-rocket text-primary me-2"></i>V2RayN 提取器
             </h2>
 
-            <form id="extract-form">
-                <div class="d-flex justify-content-center gap-3 mb-4">
+            <form id="extract-form" onsubmit="return false;">
+                <div class="d-flex justify-content-center gap-2 mb-4">
                     <div class="btn-group" role="group">
                         <input type="radio" class="btn-check" name="inputType" id="type-url" value="url" checked>
                         <label class="btn btn-outline-primary" for="type-url"><i class="fa-solid fa-link me-2"></i>订阅链接</label>
@@ -65,17 +74,17 @@
 
                 <div class="input-area mb-4">
                     <div id="group-url">
-                        <input type="url" class="form-control form-control-lg" id="input-url" placeholder="粘贴订阅链接 (http://...)">
+                        <input type="url" class="form-control form-control-lg" id="input-url" placeholder="在此粘贴订阅链接 (http://...)">
                     </div>
                     <div id="group-file" class="d-none">
-                        <input type="file" class="form-control" id="input-file" accept=".yaml,.yml,.json,.txt">
+                        <input type="file" class="form-control form-control-lg" id="input-file" accept=".yaml,.yml,.json,.txt">
                     </div>
                     <div id="group-json" class="d-none">
-                        <textarea class="form-control" id="input-json" rows="5" placeholder="粘贴配置文本..."></textarea>
+                        <textarea class="form-control" id="input-json" rows="5" placeholder="在此粘贴配置文本..."></textarea>
                     </div>
                 </div>
 
-                <button type="submit" id="btn-submit" class="btn btn-primary w-100 py-3 rounded-3">
+                <button type="button" id="btn-submit" class="btn btn-primary w-100 py-3 rounded-3 fs-5">
                     <span id="btn-text"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>开始提取</span>
                     <div id="btn-loader" class="spinner-border spinner-border-sm d-none"></div>
                 </button>
@@ -84,77 +93,78 @@
             <div id="result-section" class="d-none mt-5">
                 <hr class="border-secondary opacity-25 mb-4">
                 
-                <div class="d-flex justify-content-between align-items-center mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                     <h5 class="mb-0"><i class="fa-solid fa-circle-check text-success me-2"></i>提取结果</h5>
-                    <ul class="nav nav-pills custom-pills">
-                        <li class="nav-item"><a class="nav-link active" data-view="text">文本视图</a></li>
-                        <li class="nav-item"><a class="nav-link" data-view="table">列表视图</a></li>
+                    <ul class="nav nav-pills custom-pills ms-auto">
+                        <li class="nav-item"><a class="nav-link active" data-view="table"><i class="fa-solid fa-list me-1"></i>列表视图</a></li>
+                        <li class="nav-item"><a class="nav-link" data-view="text"><i class="fa-solid fa-align-left me-1"></i>文本视图</a></li>
                     </ul>
                 </div>
                 
-                <p id="result-summary" class="text-white-50 small"></p>
+                <p id="result-summary" class="text-white-50 small mb-3"></p>
 
-                <div id="view-text">
-                    <textarea id="result-textarea" class="form-control font-monospace small" rows="8" readonly style="background: rgba(0,0,0,0.2);"></textarea>
-                    <button id="btn-copy-all" class="btn btn-secondary w-100 mt-3">
-                        <i class="fa-solid fa-copy me-2"></i>复制全部链接
-                    </button>
-                </div>
-
-                <div id="view-table" class="d-none">
-                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                        <table class="table table-dark table-hover small">
-                            <thead class="sticky-top" style="background: #1a1a2e;">
+                <div id="view-table">
+                    <div class="table-responsive rounded-3 border border-secondary border-opacity-25" style="max-height: 600px; overflow-y: auto;">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead class="sticky-top" style="background: #1a1a2e; z-index: 1;">
                                 <tr>
-                                    <th>节点名称</th>
+                                    <th class="ps-3">节点名称</th>
                                     <th>类型</th>
                                     <th>地址</th>
-                                    <th class="text-end">操作</th>
+                                    <th class="text-end pe-3" style="min-width: 100px;">操作</th>
                                 </tr>
                             </thead>
                             <tbody id="result-tbody"></tbody>
                         </table>
                     </div>
                 </div>
+
+                <div id="view-text" class="d-none">
+                    <textarea id="result-textarea" class="form-control font-monospace small" rows="12" readonly></textarea>
+                </div>
+
+                <button id="btn-copy-all" class="btn btn-success w-100 mt-4 py-2 fw-bold">
+                    <i class="fa-solid fa-clipboard-list me-2"></i>复制全部节点链接
+                </button>
             </div>
 
-            <div id="error-alert" class="alert alert-danger mt-4 d-none" role="alert"></div>
+            <div id="error-alert" class="alert alert-danger mt-4 d-none border-0" style="background: rgba(220, 53, 69, 0.2); color: #ff868e;" role="alert">
+                <i class="fa-solid fa-circle-exclamation me-2"></i><span id="error-msg"></span>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // 1. 界面交互逻辑
-        const inputTypes = document.querySelectorAll('input[name="inputType"]');
+        // 1. 界面交互
         const inputGroups = {
             url: document.getElementById('group-url'),
             file: document.getElementById('group-file'),
             json: document.getElementById('group-json')
         };
-        inputTypes.forEach(radio => {
+        document.querySelectorAll('input[name="inputType"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                Object.keys(inputGroups).forEach(k => inputGroups[k].classList.add('d-none'));
+                Object.values(inputGroups).forEach(el => el.classList.add('d-none'));
                 inputGroups[e.target.value].classList.remove('d-none');
             });
         });
 
-        const viewLinks = document.querySelectorAll('[data-view]');
         const views = {
             text: document.getElementById('view-text'),
             table: document.getElementById('view-table')
         };
-        viewLinks.forEach(link => {
+        document.querySelectorAll('[data-view]').forEach(link => {
             link.addEventListener('click', (e) => {
-                viewLinks.forEach(l => l.classList.remove('active'));
-                e.target.classList.add('active');
-                Object.keys(views).forEach(k => views[k].classList.add('d-none'));
-                views[e.target.dataset.view].classList.remove('d-none');
+                e.preventDefault(); // 防止链接点击跳转
+                document.querySelectorAll('[data-view]').forEach(l => l.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                Object.values(views).forEach(el => el.classList.add('d-none'));
+                views[e.currentTarget.dataset.view].classList.remove('d-none');
             });
         });
 
-        // 2. 核心提取逻辑
-        document.getElementById('extract-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // 2. 核心提取逻辑 (改用 click 事件)
+        document.getElementById('btn-submit').addEventListener('click', async () => {
             resetUI();
             setLoading(true);
 
@@ -162,20 +172,28 @@
             const type = document.querySelector('input[name="inputType"]:checked').value;
             formData.append('inputType', type);
             
-            if (type === 'url') formData.append('url', document.getElementById('input-url').value);
-            if (type === 'file') formData.append('file', document.getElementById('input-file').files[0]);
-            if (type === 'json') formData.append('json_input', document.getElementById('input-json').value);
+            const urlVal = document.getElementById('input-url').value.trim();
+            const jsonVal = document.getElementById('input-json').value.trim();
+            const fileVal = document.getElementById('input-file').files[0];
+
+            // 简单的预验证
+            if (type === 'url' && !urlVal) { showError('请输入订阅链接'); setLoading(false); return; }
+            if (type === 'json' && !jsonVal) { showError('请输入配置文本'); setLoading(false); return; }
+            if (type === 'file' && !fileVal) { showError('请选择文件'); setLoading(false); return; }
+
+            if (type === 'url') formData.append('url', urlVal);
+            if (type === 'file') formData.append('file', fileVal);
+            if (type === 'json') formData.append('json_input', jsonVal);
 
             try {
                 const res = await fetch('/api/extract', { method: 'POST', body: formData });
-                const data = await res.json(); // 重点：现在期望返回 JSON
+                const data = await res.json();
 
-                if (!res.ok || data.error) throw new Error(data.error || res.statusText);
-
+                if (!res.ok || data.error) throw new Error(data.error || `请求失败: ${res.status}`);
                 showResults(data);
             } catch (err) {
                 showError(err.message);
-            } else {
+            } finally {
                 setLoading(false);
             }
         });
@@ -188,59 +206,69 @@
 
             const tbody = document.getElementById('result-tbody');
             tbody.innerHTML = '';
-            data.nodes.forEach((item, index) => {
+            data.nodes.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="text-truncate" style="max-width: 200px;" title="${item.info.name}">${item.info.name}</td>
+                    <td class="ps-3">
+                        <div class="text-truncate fw-bold" style="max-width: 180px;" title="${item.info.name}">
+                            ${item.info.name}
+                        </div>
+                    </td>
                     <td><span class="node-tag tag-${item.info.type}">${item.info.type}</span></td>
-                    <td class="font-monospace">${item.info.server}:${item.info.port}</td>
-                    <td class="text-end">
+                    <td class="font-monospace small opacity-75">${item.info.server}:${item.info.port}</td>
+                    <td class="text-end pe-3">
                         <button class="btn btn-sm btn-outline-light copy-btn" data-link="${item.link}">
-                            <i class="fa-solid fa-copy"></i>
+                            <i class="fa-regular fa-copy"></i> 复制
                         </button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
 
-            // 绑定表格内的复制按钮
             document.querySelectorAll('.copy-btn').forEach(btn => {
                 btn.addEventListener('click', () => copyToClip(btn.dataset.link, btn));
             });
+            
+            // 自动滚动到结果区
+            document.getElementById('result-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function copyToClip(text, btnElement = null) {
             navigator.clipboard.writeText(text).then(() => {
                 if (btnElement) {
                     const oriHtml = btnElement.innerHTML;
-                    btnElement.innerHTML = '<i class="fa-solid fa-check text-success"></i>';
-                    setTimeout(() => btnElement.innerHTML = oriHtml, 1500);
+                    btnElement.innerHTML = '<i class="fa-solid fa-check text-success"></i> 成功';
+                    btnElement.classList.add('border-success');
+                    setTimeout(() => {
+                        btnElement.innerHTML = oriHtml;
+                        btnElement.classList.remove('border-success');
+                    }, 1500);
                 }
-            });
+            }).catch(() => showError('复制失败，请手动复制'));
         }
+
         document.getElementById('btn-copy-all').addEventListener('click', function() {
             copyToClip(document.getElementById('result-textarea').value);
-            const oriText = this.innerHTML;
-            this.innerHTML = '<i class="fa-solid fa-check me-2"></i>已复制全部!';
-            this.classList.replace('btn-secondary', 'btn-success');
-            setTimeout(() => {
-                this.innerHTML = oriText;
-                this.classList.replace('btn-success', 'btn-secondary');
-            }, 2000);
+            const oriHtml = this.innerHTML;
+            this.innerHTML = '<i class="fa-solid fa-check me-2"></i>已复制全部链接!';
+            setTimeout(() => this.innerHTML = oriHtml, 2000);
         });
 
         function setLoading(isLoading) {
-            document.getElementById('btn-submit').disabled = isLoading;
+            const btn = document.getElementById('btn-submit');
+            btn.disabled = isLoading;
             document.getElementById('btn-text').classList.toggle('d-none', isLoading);
             document.getElementById('btn-loader').classList.toggle('d-none', !isLoading);
         }
+
         function resetUI() {
             document.getElementById('result-section').classList.add('d-none');
             document.getElementById('error-alert').classList.add('d-none');
         }
+
         function showError(msg) {
             const alert = document.getElementById('error-alert');
-            alert.textContent = msg;
+            document.getElementById('error-msg').textContent = msg;
             alert.classList.remove('d-none');
         }
     </script>
