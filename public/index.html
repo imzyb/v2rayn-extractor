@@ -249,11 +249,12 @@
             const pPct = get('progress-pct');
             if (pPct) pPct.textContent = p + '%';
         }
-        // 提交逻辑
+// 1. 提交事件 (替换整个函数)
         get('btn-go').onclick = async () => {
             resetUI();
             const formData = new FormData();
             let type = 'url';
+
             if (get('file-tab').classList.contains('active')) type = 'file';
             if (get('json-tab').classList.contains('active')) type = 'json';
             formData.append('inputType', type);
@@ -273,17 +274,33 @@
 
             try {
                 setLoading(true);
+                updateProgress(5, '正在连接...'); // <-- 修改点
+                
+                // 模拟进度
+                const timer = setInterval(() => {
+                    const oldP = parseFloat(get('progress-bar').style.width);
+                    if (oldP < 85) {
+                        updateProgress(oldP + Math.random() * 5, '正在请求...');
+                    }
+                }, 500);
+
                 const res = await fetch('/api/extract', { method: 'POST', body: formData });
+                
+                clearInterval(timer); // <-- 修改点
+                updateProgress(90, '正在解析...'); // <-- 修改点
+
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.error || `服务器错误 (${res.status})`);
-                showResult(data);
+                
+                updateProgress(100, '完成!'); // <-- 修改点
+                setTimeout(() => showResult(data), 500); // 延迟显示，让用户看到100%
             } catch (e) {
                 showError(e.message || '未知错误，请检查网络');
+                get('progress-box').classList.add('d-none'); // 失败时隐藏进度条
             } finally {
                 setLoading(false);
             }
         };
-
         // 视图切换
         get('btn-view-table').onclick = () => switchView(true);
         get('btn-view-text').onclick = () => switchView(false);
@@ -327,6 +344,8 @@
         function resetUI() {
             get('err-box').classList.add('d-none');
             get('res-box').classList.add('d-none');
+            get('progress-box').classList.add('d-none'); // <-- 添加这行
+            get('progress-bar').style.width = '0%'; // <-- 添加这行
         }
         function showError(msg) {
             get('err-msg').textContent = msg;
